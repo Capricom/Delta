@@ -1,21 +1,45 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { log } from "./renderer/services/logging";
+import { setupAIHandler } from "./main/chat";
+import { ensureTable } from "./main/db";
+import { initAttachmentStorage } from "./main/storage";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
+const registerIpcHandlers = () => {
+  ipcMain.handle("test", async (event, data) => {
+    console.log(event);
+    console.log("invoke test received:", data);
+    return { success: true };
+  });
+
+  ipcMain.on("test", async (event, data) => {
+    console.log(event);
+    console.log("send test received:", data);
+    return { success: true };
+  });
+
+  setupAIHandler();
+};
+
+const initLocalStorage = async () => {
+  await initAttachmentStorage();
+  ensureTable();
+};
+registerIpcHandlers();
+initLocalStorage();
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1920,
+    height: 1080,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
-      contextIsolation: false,
     },
   });
 
@@ -35,7 +59,9 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", () => {
+  createWindow();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

@@ -31,5 +31,5 @@ import "./renderer/index.tsx";
  */
 
 console.log(
-    '👋 This message is being logged by "renderer.ts", included via Vite',
+    "Renderer process ending",
 );
