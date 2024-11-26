@@ -173,7 +173,7 @@ export default function Space({ responses,
         setEdges([]);
         setResponses([]);
         setExpandedNodes({});
-    }, [setMessages, setNodes, setEdges]);
+    }, []);
 
     const handleDeleteResponse = useCallback(async (responseId: string) => {
         const deleteResponses = async (id: string) => {
@@ -200,131 +200,135 @@ export default function Space({ responses,
 
     const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
 
-    const updateNodesAndEdges = () => {
+    const createSystemNode = (systemPromptText: string): Node => ({
+        id: 'system-prompt',
+        type: 'default',
+        position: { x: 0, y: 0 },
+        data: {
+            label: <div className="p-4 bg-gray-800 rounded-lg text-left">
+                <div className="text-sm text-gray-400">System Prompt</div>
+                <div className="mt-2">{systemPromptText}</div>
+            </div>
+        },
+        style: { width: FLOW_CONFIG.nodeWidth, height: 'auto' },
+    });
+
+    const createResponseNode = (
+        response: Response,
+        expandedNodes: Record<string, ExpandedState>,
+        selectedResponseId: string | null,
+        handleDeleteResponse: (id: string) => void
+    ): Node => ({
+        id: response.id,
+        type: 'default',
+        position: { x: 0, y: 0 },
+        data: {
+            label: <NodeContent
+                nodeId={response.id}
+                response={response}
+                expanded={expandedNodes[response.id] || {
+                    prompt: false,
+                    response: false,
+                    promptRaw: false,
+                    responseRaw: false
+                }}
+                setExpandedNodes={setExpandedNodes}
+                onDelete={handleDeleteResponse}
+            />,
+            response,
+        },
+        style: { width: FLOW_CONFIG.nodeWidth, height: 'auto' },
+        selected: response.id === selectedResponseId
+    });
+
+    const createEdge = (source: string, target: string): Edge => ({
+        id: `edge-${source}-${target}`,
+        source,
+        target,
+    });
+
+    const updateNodesAndEdges = async () => {
+        if (!responses.length) return;
+
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
         const responseMap = new Map<string, Node>();
 
-        console.log("Responses being processed:", responses);
-        // Add this debug log
-        console.log("Parent-child relationships:", responses.map(r => ({
-            id: r.id,
-            parent_id: r.parent_id,
-            prompt: r.prompt
-        })));
-
-        const systemPromptText = responses[0]?.system || (responses.length === 0 ? systemPrompt : undefined);
+        // Handle system prompt - modified to always show if exists
+        const systemPromptText = systemPrompt || responses[0]?.system;
         if (systemPromptText) {
-            const systemNode: Node = {
-                id: 'system-prompt',
-                position: { x: 0, y: -FLOW_CONFIG.nodeSpacingY },
-                data: {
-                    label: <div className="p-4 bg-gray-800 rounded-lg text-left">
-                        <div className="text-sm text-gray-400">System Prompt</div>
-                        <div className="mt-2">{systemPromptText}</div>
-                    </div>
-                },
-                style: { width: FLOW_CONFIG.nodeWidth, height: 'auto' },
-                draggable: true,
-            };
+            const systemNode = createSystemNode(systemPromptText);
             newNodes.push(systemNode);
+            responseMap.set('system-prompt', systemNode);
         }
 
-        responses.forEach((response: Response) => {
-            console.log("Processing response:", response);
-            const nodeId = response.id;
-            const expanded = expandedNodes[nodeId] || { prompt: false, response: false, promptRaw: false, responseRaw: false };
-
-            const newNode: Node = {
-                id: nodeId,
-                position: { x: 0, y: 0 },
-                data: {
-                    label: <NodeContent
-                        nodeId={nodeId}
-                        response={response}
-                        expanded={expanded}
-                        setExpandedNodes={setExpandedNodes}
-                        onDelete={handleDeleteResponse}
-                    />,
-                    response,
-                },
-                style: { width: FLOW_CONFIG.nodeWidth, height: 'auto', overflow: 'visible' },
-                draggable: true,
-                selected: nodeId === selectedResponseId
-            };
-
-            newNodes.push(newNode);
-            responseMap.set(nodeId, newNode);
+        // Create response nodes - removed sorting as responses should maintain their order
+        responses.forEach(response => {
+            const node = createResponseNode(response, expandedNodes, selectedResponseId, handleDeleteResponse);
+            newNodes.push(node);
+            responseMap.set(response.id, node);
         });
 
-        responses.forEach((response: Response) => {
-            console.log("Processing response edges:", response);
+        // Create edges - modified to ensure proper connections
+        responses.forEach(response => {
             if (response.parent_id) {
-                const parentNode = responseMap.get(response.parent_id);
-                const currentNode = responseMap.get(response.id);
-
-                if (parentNode && currentNode) {
-                    const newEdge: Edge = {
-                        id: `edge-${response.parent_id}-${response.id}`,
-                        source: response.parent_id,
-                        target: response.id,
-                        type: 'simplebezier',
-                        style: { strokeWidth: 2 }
-                    };
-                    newEdges.push(newEdge);
+                if (responseMap.has(response.parent_id)) {
+                    newEdges.push(createEdge(response.parent_id, response.id));
                 }
             } else if (systemPromptText) {
-                const newEdge: Edge = {
-                    id: `edge-system-${response.id}`,
-                    source: 'system-prompt',
-                    target: response.id,
-                    type: 'simplebezier',
-                    style: { strokeWidth: 2 }
-                };
-                newEdges.push(newEdge);
+                newEdges.push(createEdge('system-prompt', response.id));
             }
         });
 
-        console.log("[Space] New nodes:", newNodes);
-        console.log("[Space] New edges:", newEdges);
-
-        const { nodes: layoutedNodes, edges: layoutedEdges } = layout.getLayoutedElements(newNodes, newEdges);
-
-        setNodes(layoutedNodes as any);
-        setEdges(layoutedEdges as any);
-
-        console.log("[Space] Layouted nodes:", layoutedNodes);
-        console.log("[Space] Layouted edges:", layoutedEdges);
-
-        if (selectedResponseId) {
-            console.log("[Space] Selected response ID:", selectedResponseId);
-            console.log("[Space] Found node:", layoutedNodes.find(node => node.id === selectedResponseId));
-            console.log("[Space] Found response:", responses.find(r => r.id === selectedResponseId));
-            const selectedNode = layoutedNodes.find(node => node.id === selectedResponseId);
-            const clickedResponse = responses.find(r => r.id === selectedResponseId);
-            if (selectedNode && clickedResponse) {
-                const newMessages = buildMessageChain(responses, clickedResponse);
-                setMessages(newMessages);
-
+        const result = await layout.getLayoutedElements(newNodes, newEdges);
+        if (result) {
+            const { nodes: layoutedNodes, edges: layoutedEdges } = result;
+            setNodes(layoutedNodes);
+            setEdges(layoutedEdges);
+            // Handle viewport updates
+            if (selectedResponseId) {
+                const selectedNode = layoutedNodes.find(node => node.id === selectedResponseId);
+                if (selectedNode) {
+                    setTimeout(() => {
+                        reactFlowInstance.setCenter(
+                            selectedNode.position.x + FLOW_CONFIG.nodeWidth / 2,
+                            selectedNode.position.y + FLOW_CONFIG.nodeHeight / 2,
+                            { zoom: 0.85, duration: 400 }
+                        );
+                        setSelectedResponseId(null);
+                    }, 150);
+                }
+            } else if (resizeTrigger === ResizeTrigger.CONVERSATION_SWITCH) {
                 setTimeout(() => {
-                    reactFlowInstance.setCenter(
-                        selectedNode.position.x + FLOW_CONFIG.nodeWidth / 2,
-                        selectedNode.position.y + FLOW_CONFIG.nodeHeight / 2,
-                        { zoom: 0.85, duration: 400 }
-                    );
-                    setSelectedResponseId(null);
+                    reactFlowInstance.fitView({ padding: 0.25, duration: 400 });
                 }, 150);
             }
-        } else if (resizeTrigger === ResizeTrigger.CONVERSATION_SWITCH) {
-            setTimeout(() => {
-                reactFlowInstance.fitView({ padding: 0.25 });
-            }, 150);
         }
+
+
+
+        setResizeTrigger(ResizeTrigger.NONE);
     };
 
     useEffect(() => {
         updateNodesAndEdges();
-    }, [responses, setNodes, setEdges, reactFlowInstance, expandedNodes, nodes.length, toggleNodeState, selectedResponseId, messages, systemPrompt]);
+    }, [responses]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [nodes.length]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [expandedNodes]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [selectedResponseId]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [systemPrompt]);
 
     const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
         const clickedResponse = node.data.response as Response;

@@ -21,7 +21,6 @@ const useConversationResponses = () => {
 
     const fetchResponses = async (conversationId: string) => {
         const data = await window.api.getResponses(conversationId);
-        console.log("[App] Fetching responses for conversation:", conversationId, data);
         setResponses(data);
     };
 

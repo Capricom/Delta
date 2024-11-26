@@ -72,7 +72,7 @@ export function setupChatHandler() {
                             topP,
                             conversation,
                             attachments,
-                            annotations: promptAnnotations, // Pass annotations from prompt
+                            annotations: promptAnnotations,
                         });
                     },
                 });
