@@ -1,3 +1,5 @@
+import { ipcMain } from "electron";
+
 import { ollama } from "ollama-ai-provider";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
@@ -50,4 +52,29 @@ export function getProviderName(model: string) {
 
 export function getEmbeddingProvider(_model: string) {
     return ollama.textEmbeddingModel("nomic-embed-text");
+}
+
+const getModelsHandler = async () => {
+    try {
+        const modelsByProvider: Record<string, string[]> = {};
+
+        Object.entries(modelProviders).forEach(([model, { providerName }]) => {
+            if (!modelsByProvider[providerName]) {
+                modelsByProvider[providerName] = [];
+            }
+            modelsByProvider[providerName].push(model);
+        });
+
+        return {
+            models: Object.keys(modelProviders),
+            modelsByProvider,
+        };
+    } catch (error) {
+        console.error("Error fetching models:", error);
+        throw new Error("Failed to fetch models");
+    }
+};
+
+export function setupModelsHandlers() {
+    ipcMain.handle("models:get", getModelsHandler);
 }

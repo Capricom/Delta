@@ -6,12 +6,12 @@ import type { Message } from "ai";
 import { send } from "vite";
 
 const invokeMessage = async (id: string, data: any) => {
-    console.log("DEBUG: Invoking message", id, data);
+    console.log("Invoking message", id, data);
     ipcRenderer.invoke(id, data);
 };
 
 const sendMessage = async (id: string, data: any) => {
-    console.log("DEBUG: Sending message", id, data);
+    console.log("Sending message", id, data);
     ipcRenderer.send(id, data);
 };
 const onMessageHandler = (
@@ -33,12 +33,46 @@ contextBridge.exposeInMainWorld("api", {
         console.log("testing");
         sendMessage("test", data);
     },
-    startStream: (messages: Message[]) =>
-        ipcRenderer.send("start-stream", messages),
+    startStream: (options: {
+        messages: Message[];
+        model: string;
+        temperature: number;
+        topP: number;
+        systemPrompt: string;
+    }) => ipcRenderer.send("chat:start-stream", options),
     onStreamData: (callback) =>
-        ipcRenderer.on("stream-data", (_event, value) => callback(value)),
+        ipcRenderer.on(
+            "chat:stream-data",
+            (_event, message: Message) => callback(message),
+        ),
     onStreamComplete: (callback) =>
-        ipcRenderer.on("stream-complete", () => callback()),
+        ipcRenderer.on(
+            "chat:stream-complete",
+            (_event, message: Message) => callback(message),
+        ),
+    onStreamError: (callback) =>
+        ipcRenderer.on(
+            "chat:stream-error",
+            (_event, error: Error) => callback(error),
+        ),
+    getConversations: () => ipcRenderer.invoke("conversations:get"),
+    getResponses: (conversationId: string) =>
+        ipcRenderer.invoke("conversations:getResponses", conversationId),
+    deleteConversation: (conversationId: string) =>
+        ipcRenderer.invoke("conversations:delete", conversationId),
+    deleteResponse: (conversationId: string, responseId: string) =>
+        ipcRenderer.invoke("conversations:deleteResponse", {
+            conversationId,
+            responseId,
+        }),
+    getModels: () => ipcRenderer.invoke("models:get"),
+    findSimilarResponses: (query: string) =>
+        ipcRenderer.invoke("search:find", query),
+
+    removeStreamDataListener: (callback) =>
+        ipcRenderer.removeListener("chat:stream-data", callback),
+    removeStreamCompleteListener: (callback) =>
+        ipcRenderer.removeListener("chat:stream-complete", callback),
 });
 
-console.log("DEBUG: Preload script initialized");
+console.log("Preload script initialized");

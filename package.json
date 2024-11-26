@@ -52,6 +52,7 @@
     "@xyflow/react": "^12.3.5",
     "ai": "^4.0.3",
     "better-sqlite3": "^11.5.0",
+    "dagre": "^0.8.5",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^10.0.0",
     "lucide-react": "^0.460.0",

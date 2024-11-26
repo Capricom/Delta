@@ -5,83 +5,15 @@ import { deleteAttachment, getAttachment } from "./storage";
 import { app } from "electron";
 import { join } from "path";
 import { mkdir } from "fs/promises";
-
-export interface Attachment {
-    id: string;
-    response_id: string;
-    file_path: string;
-    type: string;
-    created_at: string;
-    url?: string;
-}
-
-export interface DbResponse {
-    id: string;
-    model: string;
-    provider: string;
-    prompt: string;
-    system: string;
-    response: string;
-    conversation_id: string;
-    parent_id: string;
-    duration_ms: number;
-    datetime_utc: string;
-    temperature: number;
-    top_p: number;
-    attachments: string;
-}
-
-export interface Response {
-    id: string;
-    model: string;
-    provider: string;
-    prompt: string;
-    system: string;
-    response: string;
-    conversation_id: string;
-    parent_id: string;
-    duration_ms: number;
-    datetime_utc: string;
-    temperature: number;
-    top_p: number;
-    attachments: string[];
-}
-
-export interface Conversation {
-    id: string;
-    title: string;
-    created_at: string;
-}
-
-export interface DbInsertData {
-    [key: string]: any;
-}
-
-export interface EmbeddingData {
-    prompt_embedding: number[];
-    response_embedding: number[];
-    model: string;
-}
-
-export interface DbFunctions {
-    ensureTable: () => void;
-    insert: (tableName: string, data: DbInsertData) => RunResult;
-    getAllConversations: () => Conversation[];
-}
-
-export interface SimilarResponse {
-    id: number;
-    response_id: string;
-    conversation_id: string;
-    type: "prompt" | "response";
-    prompt: string;
-    response: string;
-    text: string;
-    distance: number;
-    model: string;
-    provider: string;
-    datetime_utc: string;
-}
+import {
+    Attachment,
+    Conversation,
+    DbInsertData,
+    DbResponse,
+    EmbeddingData,
+    Response,
+    SimilarResponse,
+} from "src/renderer/types/types";
 
 const DELTA_DATA_DIR = join(app.getPath("userData"), "delta_data");
 try {

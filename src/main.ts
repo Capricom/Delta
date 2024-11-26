@@ -1,9 +1,12 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow } from "electron";
 import path from "path";
 import { log } from "./renderer/services/logging";
-import { setupAIHandler } from "./main/chat";
+import { setupChatHandler } from "./main/chat";
 import { ensureTable } from "./main/db";
 import { initAttachmentStorage } from "./main/storage";
+import { setupConversationsHandlers } from "./main/conversations";
+import { setupSearchHandlers } from "./main/search";
+import { setupModelsHandlers } from "./main/models";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -11,19 +14,10 @@ if (require("electron-squirrel-startup")) {
 }
 
 const registerIpcHandlers = () => {
-  ipcMain.handle("test", async (event, data) => {
-    console.log(event);
-    console.log("invoke test received:", data);
-    return { success: true };
-  });
-
-  ipcMain.on("test", async (event, data) => {
-    console.log(event);
-    console.log("send test received:", data);
-    return { success: true };
-  });
-
-  setupAIHandler();
+  setupChatHandler();
+  setupConversationsHandlers();
+  setupModelsHandlers();
+  setupSearchHandlers();
 };
 
 const initLocalStorage = async () => {
@@ -31,6 +25,7 @@ const initLocalStorage = async () => {
   ensureTable();
 };
 registerIpcHandlers();
+
 initLocalStorage();
 
 const createWindow = () => {

@@ -16,6 +16,8 @@ export function useSpaceLayout() {
         edges: Edge[],
         direction = "TB",
     ) => {
+        console.log("[useSpaceLayout] Nodes:", nodes);
+        console.log("[useSpaceLayout] Edges:", edges);
         const dagreGraph = new dagre.graphlib.Graph();
         dagreGraph.setDefaultEdgeLabel(() => ({}));
 
