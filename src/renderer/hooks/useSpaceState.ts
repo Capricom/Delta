@@ -1,6 +1,6 @@
 import { useEdgesState, useNodesState } from "@xyflow/react";
-import { useState } from "react";
-import { ExpandedState } from "../types/flow";
+import { useRef, useState } from "react";
+import { ExpandedState } from "../types/types";
 
 const SYSTEM_PROMPT = `You are an instance of a language model.
 You've been trained using a large amount of data from the internet.
@@ -33,6 +33,7 @@ export function useSpaceState() {
     );
     const [systemPrompt, setSystemPrompt] = useState<string>(SYSTEM_PROMPT);
     const [droppedImages, setDroppedImages] = useState<string[]>([]);
+    const chatTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     return {
         nodes,
@@ -51,5 +52,6 @@ export function useSpaceState() {
         setSystemPrompt,
         droppedImages,
         setDroppedImages,
+        chatTextareaRef,
     };
 }

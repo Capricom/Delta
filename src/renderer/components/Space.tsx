@@ -125,6 +125,7 @@ export default function Space({ responses,
         setSystemPrompt,
         droppedImages,
         setDroppedImages,
+        chatTextareaRef,
     } = useSpaceState();
     const layout = useSpaceLayout();
 
@@ -167,12 +168,17 @@ export default function Space({ responses,
         }
     }, [responses, setMessages, reload]);
 
+    const focusChatTextArea = () => {
+        chatTextareaRef.current?.focus();
+    }
+
     const handleNewConversation = useCallback(() => {
         setMessages([]);
         setNodes([]);
         setEdges([]);
         setResponses([]);
         setExpandedNodes({});
+        focusChatTextArea()
     }, []);
 
     const handleDeleteResponse = useCallback(async (responseId: string) => {
@@ -197,6 +203,10 @@ export default function Space({ responses,
         setIsFullScreen(prev => prev === 'chat' ? 'none' : 'chat');
     }, []);
     useHotkeys('alt+n', handleNewConversation, [handleNewConversation]);
+    useHotkeys('alt+l', (e) => {
+        e.preventDefault();
+        focusChatTextArea();
+    }, { preventDefault: true });
 
     const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
 
@@ -423,7 +433,6 @@ export default function Space({ responses,
             <div className={`${isFullScreen === 'flow' ? 'hidden' : ''} ${isFullScreen === 'none' ? 'w-2/5' : 'w-full flex justify-center'} relative`}>
                 <div className={`${isFullScreen === 'chat' ? 'w-2/3' : 'w-full'} relative`}>
                     <ChatInterface
-                        error={error}
                         messages={messages}
                         input={input}
                         handleInputChange={handleInputChange}
@@ -439,6 +448,8 @@ export default function Space({ responses,
                         onRegenerateClick={onRegenerateClick}
                         droppedImages={droppedImages}
                         setDroppedImages={setDroppedImages}
+                        error={error}
+                        chatTextareaRef={chatTextareaRef}
                     />
                     <div className="absolute top-4 left-4">
                         {isFullScreen === 'none' ? (

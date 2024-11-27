@@ -25,6 +25,7 @@ interface ChatInterfaceProps {
   droppedImages: string[];
   setDroppedImages: (images: string[]) => void;
   error?: Error;
+  chatTextareaRef: React.RefObject<HTMLTextAreaElement>;
 }
 
 export default function ChatInterface({
@@ -44,13 +45,8 @@ export default function ChatInterface({
   droppedImages,
   setDroppedImages,
   error,
+  chatTextareaRef,
 }: ChatInterfaceProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  useHotkeys('alt+l', (e) => {
-    e.preventDefault();
-    textareaRef.current?.focus();
-  }, { preventDefault: true });
-
   const [showSettings, setShowSettings] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -268,7 +264,7 @@ export default function ChatInterface({
           input={input}
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmit}
-          textareaRef={textareaRef}
+          textareaRef={chatTextareaRef}
           droppedImages={droppedImages}
           setDroppedImages={setDroppedImages}
         />
