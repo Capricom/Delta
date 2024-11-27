@@ -38,7 +38,7 @@ export default function Sidebar({
 
     return (
         <>
-            <div className={`${isSidebarOpen ? 'w-[36rem]' : 'w-0'} bg-gray-100 dark:bg-gray-900 relative overflow-y-auto h-screen`}>
+            <div className={`${isSidebarOpen ? 'w-[36rem]' : 'w-0'} bg-gray-100 dark:bg-gray-900 relative overflow-y-auto h-screen [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full`}>
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-2">
                         <GitFork size={20} className="rotate-180 text-gray-900 dark:text-gray-200" />

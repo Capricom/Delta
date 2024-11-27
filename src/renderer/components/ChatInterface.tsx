@@ -2,7 +2,6 @@ import React from 'react';
 import { Copy, Download, Settings, RotateCw } from 'lucide-react';
 import MarkdownWithSyntax from './MarkdownWithSyntax';
 import { useState, useRef, useEffect, Key } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
 import { Message } from 'ai';
