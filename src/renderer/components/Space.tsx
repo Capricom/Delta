@@ -258,7 +258,6 @@ export default function Space({ responses,
     });
 
     const updateNodesAndEdges = async () => {
-        if (!responses.length) return;
 
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
@@ -319,6 +318,7 @@ export default function Space({ responses,
 
         setResizeTrigger(ResizeTrigger.NONE);
     };
+
 
     useEffect(() => {
         updateNodesAndEdges();

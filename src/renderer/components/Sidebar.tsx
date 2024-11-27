@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu, ChevronDown, ChevronRight, GitFork, Plus } from 'lucide-react';
 import ConversationsList from "./ConversationsList";
 import { useState } from 'react';
+import { ResizeTrigger } from './Space';
 
 interface SidebarProps {
     isSidebarOpen: boolean;
@@ -100,7 +101,7 @@ export default function Sidebar({
                                         if (conversation) {
                                             setMessages([]);
                                             setExpandedNodes({});
-                                            setResizeTrigger('conversation_switch');
+                                            setResizeTrigger(ResizeTrigger.CONVERSATION_SWITCH);
                                             if (responseId) {
                                                 onSearchResultSelect(responseId);
                                             }
