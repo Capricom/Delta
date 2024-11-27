@@ -142,7 +142,11 @@ export default function ChatInterface({
                       e.stopPropagation();
                       navigator.clipboard.writeText(message.content);
                     }}
-                    className="p-1 hover:bg-gray-600/50 dark:hover:bg-gray-500/50 rounded transition-all text-gray-700 dark:text-gray-300"
+                    className={`p-1 rounded transition-all ${
+                      message.role === "user"
+                        ? "hover:bg-blue-600/50 text-white"
+                        : "hover:bg-gray-600/50 dark:hover:bg-gray-500/50 text-gray-700 dark:text-gray-300"
+                    }`}
                   >
                     <Copy size={16} />
                   </button>
@@ -178,6 +182,7 @@ export default function ChatInterface({
                 type="button"
                 onClick={() => setShowSettings(!showSettings)}
                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] w-[40px] transition-all text-gray-700 dark:text-gray-300"
+                title="Model Settings"
               >
                 <Settings size={20} />
               </button>
@@ -185,6 +190,7 @@ export default function ChatInterface({
                 type="button"
                 onClick={handleDownload}
                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] w-[40px] transition-all text-gray-700 dark:text-gray-300"
+                title="Download Conversation"
               >
                 <Download size={20} />
               </button>
