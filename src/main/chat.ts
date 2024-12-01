@@ -54,7 +54,7 @@ export function setupChatHandler() {
                     temperature,
                     topP,
                     messages: newMessages,
-                    system: systemPrompt,
+                    ...(systemPrompt?.trim() && { system: systemPrompt }), // Only include system if it has content
                     async onFinish(response) {
                         const prompt = messages[messages.length - 1].content;
                         const promptAnnotations =

@@ -271,7 +271,7 @@ export default function Space({ responses,
         const responseMap = new Map<string, Node>();
 
         // Handle system prompt - modified to always show if exists
-        const systemPromptText = systemPrompt || responses[0]?.system;
+        const systemPromptText = responses[0]?.system ?? (responses.length > 0 ? '' : systemPrompt);
         if (systemPromptText) {
             const systemNode = createSystemNode(systemPromptText);
             newNodes.push(systemNode);

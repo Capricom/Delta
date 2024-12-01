@@ -1,9 +1,24 @@
 import { ipcMain } from "electron";
-
 import { ollama } from "ollama-ai-provider";
-import { google } from "@ai-sdk/google";
-import { anthropic } from "@ai-sdk/anthropic";
-import { openai } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI, google } from "@ai-sdk/google";
+import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI, openai } from "@ai-sdk/openai";
+import { apiKeys } from "./settings";
+
+const getAnthropicProvider = () =>
+    apiKeys.get("anthropic")
+        ? createAnthropic({ apiKey: apiKeys.get("anthropic") })
+        : anthropic;
+
+const getGoogleProvider = () =>
+    apiKeys.get("google")
+        ? createGoogleGenerativeAI({ apiKey: apiKeys.get("google") })
+        : google;
+
+const getOpenAIProvider = () =>
+    apiKeys.get("openai")
+        ? createOpenAI({ apiKey: apiKeys.get("openai") })
+        : openai;
 
 export const modelProviders = {
     "llama3.2": { provider: ollama, providerName: "ollama" },
@@ -12,26 +27,62 @@ export const modelProviders = {
     "gemma2": { provider: ollama, providerName: "ollama" },
     "mistral": { provider: ollama, providerName: "ollama" },
 
-    "gemini-1.5-flash-latest": { provider: google, providerName: "google" },
-    "gemini-1.5-pro-latest": { provider: google, providerName: "google" },
+    "gemini-1.5-flash-latest": {
+        get provider() {
+            return getGoogleProvider();
+        },
+        providerName: "google",
+    },
+    "gemini-1.5-pro-latest": {
+        get provider() {
+            return getGoogleProvider();
+        },
+        providerName: "google",
+    },
 
     "claude-3-5-sonnet-20240620": {
-        provider: anthropic,
+        get provider() {
+            return getAnthropicProvider();
+        },
         providerName: "anthropic",
     },
     "claude-3-5-sonnet-20241022": {
-        provider: anthropic,
+        get provider() {
+            return getAnthropicProvider();
+        },
         providerName: "anthropic",
     },
     "claude-3-5-haiku-20241022": {
-        provider: anthropic,
+        get provider() {
+            return getAnthropicProvider();
+        },
         providerName: "anthropic",
     },
 
-    "gpt-4o": { provider: openai, providerName: "openai" },
-    "gpt-4o-mini": { provider: openai, providerName: "openai" },
-    "o1-preview": { provider: openai, providerName: "openai" },
-    "o1-mini": { provider: openai, providerName: "openai" },
+    "gpt-4o": {
+        get provider() {
+            return getOpenAIProvider();
+        },
+        providerName: "openai",
+    },
+    "gpt-4o-mini": {
+        get provider() {
+            return getOpenAIProvider();
+        },
+        providerName: "openai",
+    },
+    "o1-preview": {
+        get provider() {
+            return getOpenAIProvider();
+        },
+        providerName: "openai",
+    },
+    "o1-mini": {
+        get provider() {
+            return getOpenAIProvider();
+        },
+        providerName: "openai",
+    },
 } as const;
 
 export type SupportedModel = keyof typeof modelProviders;

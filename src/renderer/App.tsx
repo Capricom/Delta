@@ -76,12 +76,27 @@ export const App: FC = () => {
     }, []);
 
     useEffect(() => {
-        const fetchModels = async () => {
+        const fetchAndFilterModels = async () => {
             const data = await window.api.getModels();
-            setModelsByProvider(data.modelsByProvider);
+            const availableProviders = settings.providers
+                .filter(p => p.apiKey && p.apiKey.trim() !== '')
+                .map(p => p.name)
+                .sort();
+            const filteredModels = Object.fromEntries(
+                Object.entries(data.modelsByProvider)
+                    .filter(([provider]) => availableProviders.includes(provider))
+                    .sort(([a], [b]) => a.localeCompare(b))
+            );
+            setModelsByProvider(filteredModels);
+
+            // Set the first available model as the selected model
+            const firstProvider = Object.keys(filteredModels)[0];
+            if (firstProvider && filteredModels[firstProvider]?.length > 0) {
+                setSelectedModel(filteredModels[firstProvider][0]);
+            }
         };
-        fetchModels();
-    }, []);
+        fetchAndFilterModels();
+    }, [settings]);
 
     return (
         <ReactFlowProvider>
