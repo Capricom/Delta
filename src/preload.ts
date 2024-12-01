@@ -3,11 +3,10 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 import type { Message } from "ai";
-import { send } from "vite";
 
 const invokeMessage = async (id: string, data: any) => {
     console.log("Invoking message", id, data);
-    ipcRenderer.invoke(id, data);
+    return ipcRenderer.invoke(id, data);
 };
 
 const sendMessage = async (id: string, data: any) => {
@@ -68,11 +67,16 @@ contextBridge.exposeInMainWorld("api", {
     getModels: () => ipcRenderer.invoke("models:get"),
     findSimilarResponses: (query: string) =>
         ipcRenderer.invoke("search:find", query),
-
-    removeStreamDataListener: (callback) =>
-        ipcRenderer.removeListener("chat:stream-data", callback),
-    removeStreamCompleteListener: (callback) =>
-        ipcRenderer.removeListener("chat:stream-complete", callback),
+    getSettings: () => {
+        console.log('Preload: Invoking settings:get')
+        return ipcRenderer.invoke("settings:get")
+    },
+    saveSettings: (
+        settings: { providers: { name: string; apiKey: string }[] },
+    ) => {
+        console.log('Preload: Invoking settings:save with settings:', settings)
+        return ipcRenderer.invoke("settings:save", settings)
+    },
 });
 
 console.log("Preload script initialized");

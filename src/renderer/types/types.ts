@@ -77,7 +77,7 @@ export interface SimilarResponse {
     datetime_utc: string;
 }
 
-export interface FlowProps {
+export interface SpaceProps {
     // Conversation/Response data
     conversations: Conversation[];
     responses: Response[];
@@ -95,6 +95,11 @@ export interface FlowProps {
     setTemperature: (temp: number) => void;
     topP: number;
     setTopP: (topP: number) => void;
+
+    // Settings
+    settings: Settings;
+    updateProvider: (name: string, apiKey: string) => void;
+    saveSettings: (settings: Settings) => Promise<boolean>;
 }
 
 export interface ExpandedState {
@@ -102,4 +107,13 @@ export interface ExpandedState {
     response: boolean;
     promptRaw: boolean;
     responseRaw: boolean;
+}
+
+export interface ModelProvider {
+    name: string;
+    apiKey: string;
+}
+
+export interface Settings {
+    providers: ModelProvider[];
 }

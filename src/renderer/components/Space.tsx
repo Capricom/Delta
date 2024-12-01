@@ -9,13 +9,13 @@ import {
     useReactFlow,
 } from '@xyflow/react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { ArrowLeft, ArrowRight, Maximize2, Minimize2, Menu } from 'lucide-react';
-
+import { ArrowLeft, ArrowRight, Maximize2, Minimize2, Menu, SettingsIcon } from 'lucide-react';
+import { SettingsModal } from './SettingsModal';
 import ChatInterface from "./ChatInterface";
 import NodeContent from "./NodeContent";
 import Sidebar from "./Sidebar";
 import '@xyflow/react/dist/style.css';
-import { ExpandedState, FlowProps, Response } from "../types/types"
+import { ExpandedState, SpaceProps, Response, Settings } from "../types/types"
 import { useSpaceLayout } from "../hooks/useSpaceLayout";
 import { useSpaceState } from "../hooks/useSpaceState";
 import { Message } from "ai/react";
@@ -103,7 +103,10 @@ export default function Space({ responses,
     setTemperature,
     topP,
     setTopP,
-}: FlowProps) {
+    settings,
+    updateProvider,
+    saveSettings,
+}: SpaceProps) {
 
     const reactFlowInstance = useReactFlow();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -148,6 +151,8 @@ export default function Space({ responses,
         },
     });
 
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
     const toggleNodeState = useCallback((nodeId: string, key: keyof ExpandedState) => {
         setExpandedNodes(prev => ({
             ...prev,
@@ -183,6 +188,7 @@ export default function Space({ responses,
 
     const handleDeleteResponse = useCallback(async (responseId: string) => {
         const deleteResponses = async (id: string) => {
+            console.log("Deleting response", id);
             await window.api.deleteResponse(responses[0].conversation_id, id);
 
             const children = responses.filter(r => r.parent_id === id);
@@ -207,6 +213,7 @@ export default function Space({ responses,
         e.preventDefault();
         focusChatTextArea();
     }, { preventDefault: true });
+    useHotkeys('alt+e', () => setIsSettingsModalOpen(prev => !prev), []);
 
     const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
 
@@ -378,7 +385,6 @@ export default function Space({ responses,
         }
     }, [responses, setMessages]);
 
-
     return (
         <div className="flex min-h-screen relative dark:bg-gray-900">
             <Sidebar
@@ -395,6 +401,15 @@ export default function Space({ responses,
                 systemPrompt={systemPrompt}
                 setSystemPrompt={setSystemPrompt}
             />
+            {isSidebarOpen && (
+                <div className="absolute top-4 right-4">
+                    <SettingsIcon
+                        className="cursor-pointer hover:opacity-70 text-gray-900 dark:text-gray-100"
+                        onClick={() => setIsSettingsModalOpen(true)}
+                        size={20}
+                    />
+                </div>
+            )}
             <div className={`border-l border-gray-200 dark:border-gray-700 ${isSidebarOpen ? '' : 'hidden'}`}></div>
             <div className={`${isFullScreen === 'chat' ? 'hidden' : ''} ${isFullScreen === 'none' ? 'w-3/5' : 'w-full'} relative`}>
                 <ReactFlow
@@ -426,6 +441,32 @@ export default function Space({ responses,
                             onClick={() => setIsFullScreen('none')}
                             size={20}
                         />
+                    )}
+
+                    {isSettingsModalOpen && (
+                        <div
+                            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                            onClick={(e) => {
+                                if (e.target === e.currentTarget) {
+                                    setIsSettingsModalOpen(false);
+                                }
+                            }}
+                        >
+                            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg max-w-lg w-full relative">
+                                <button
+                                    onClick={() => setIsSettingsModalOpen(false)}
+                                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
+                                    ✕
+                                </button>
+                                <SettingsModal
+                                    settings={settings}
+                                    updateProvider={updateProvider}
+                                    saveSettings={saveSettings}
+                                    onClose={() => setIsSettingsModalOpen(false)}
+                                />
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
@@ -470,10 +511,15 @@ export default function Space({ responses,
             </div>
 
             {!isSidebarOpen && (
-                <div className="absolute left-4 top-4">
+                <div className="absolute left-4 top-4 flex gap-2">
                     <Menu
                         className="cursor-pointer hover:opacity-70 text-gray-900 dark:text-gray-100"
                         onClick={() => setSidebarOpen(true)}
+                        size={20}
+                    />
+                    <SettingsIcon
+                        className="cursor-pointer hover:opacity-70 text-gray-900 dark:text-gray-100"
+                        onClick={() => setIsSettingsModalOpen(true)}
                         size={20}
                     />
                 </div>

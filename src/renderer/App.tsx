@@ -4,6 +4,8 @@ import { Conversation, Response } from "./types/types";
 import "@xyflow/react/dist/style.css";
 import Space from "./components/Space";
 import React from "react";
+import { Settings } from "./types/types";
+
 
 const useConversations = () => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -34,6 +36,40 @@ export const App: FC = () => {
     const [temperature, setTemperature] = useState<number>(0.7);
     const [topP, setTopP] = useState<number>(0.9);
     const { conversations, fetchConversations } = useConversations();
+    const [settings, setSettings] = useState<Settings>({ providers: [] });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const settings = await window.api.getSettings();
+            setSettings(settings);
+        };
+        fetchSettings();
+    }, []);
+
+    const updateProvider = (name: string, apiKey: string) => {
+        const newSettings = {
+            ...settings,
+            providers: [
+                ...settings.providers.filter(p => p.name !== name),
+                { name, apiKey }
+            ]
+        };
+        setSettings(newSettings);
+    };
+
+    const saveSettings = async (settingsToSave: Settings) => {
+        try {
+            const result = await window.api.saveSettings(settingsToSave);
+            if (!result) {
+                throw new Error('Failed to save settings');
+            }
+            setSettings(settingsToSave);
+            return result;
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            throw error;
+        }
+    };
 
     useEffect(() => {
         fetchConversations();
@@ -62,6 +98,9 @@ export const App: FC = () => {
                 setTemperature={setTemperature}
                 topP={topP}
                 setTopP={setTopP}
+                settings={settings}
+                updateProvider={updateProvider}
+                saveSettings={saveSettings}
             />
         </ReactFlowProvider>
     );

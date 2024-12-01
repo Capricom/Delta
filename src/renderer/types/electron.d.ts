@@ -18,10 +18,6 @@ interface IElectronAPI {
         callback: (event: any, message: Message) => void,
     ) => void;
     onStreamError: (callback: (event: any, error: Error) => void) => void;
-    removeStreamDataListener: (callback: (value: any) => void) => void;
-    removeStreamCompleteListener: (
-        callback: (event: any, message: Message) => void,
-    ) => void;
     getConversations: () => Promise<Conversation[]>;
     getResponses: (conversationId: string) => Promise<Response[]>;
     deleteConversation: (
@@ -33,6 +29,12 @@ interface IElectronAPI {
     ) => Promise<{ success: boolean }>;
     getModels: () => Promise<{ modelsByProvider: Record<string, string[]> }>;
     findSimilarResponses: (query: string) => Promise<SimilarResponse[]>;
+    getSettings: () => Promise<
+        { providers: { name: string; apiKey: string }[] }
+    >;
+    saveSettings: (
+        settings: { providers: { name: string; apiKey: string }[] },
+    ) => Promise<boolean>;
 }
 
 declare global {
