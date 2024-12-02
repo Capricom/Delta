@@ -150,23 +150,7 @@ export default function Space({ responses,
 
     useEffect(() => {
         updateNodesAndEdges();
-    }, [responses]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [nodes.length]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [expandedNodes]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [selectedResponseId]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [systemPrompt]);
+    }, [responses, nodes.length, expandedNodes, selectedResponseId, systemPrompt]);
 
     return (
         <div className="flex min-h-screen relative dark:bg-gray-900">
