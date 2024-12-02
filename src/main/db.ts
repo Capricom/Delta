@@ -60,25 +60,44 @@ export function ensureTable(): void {
         conversation_id TEXT,
         parent_id TEXT,
         duration_ms INTEGER,
-        datetime_utc DATETIME,
+        datetime_utc TEXT,
         temperature REAL,
-        top_p REAL
+        top_p REAL,
+        FOREIGN KEY(conversation_id) REFERENCES conversations(id)
     `;
 
-    db.prepare(
-        `CREATE TABLE IF NOT EXISTS attachments (${attachmentsTableSchema})`,
-    ).run();
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS conversations (${conversationsTableSchema});
+        CREATE TABLE IF NOT EXISTS responses (${responsesTableSchema});
+        CREATE TABLE IF NOT EXISTS attachments (${attachmentsTableSchema});
+        CREATE TABLE IF NOT EXISTS embeddings (${embeddingsTableSchema});
 
-    db.prepare(
-        `CREATE TABLE IF NOT EXISTS conversations (${conversationsTableSchema})`,
-    ).run();
+        CREATE VIRTUAL TABLE IF NOT EXISTS responses_fts USING fts5(
+            id UNINDEXED,
+            conversation_id UNINDEXED,
+            prompt,
+            response,
+            content='responses',
+            content_rowid='rowid'
+        );
 
-    db.prepare(
-        `CREATE TABLE IF NOT EXISTS embeddings (${embeddingsTableSchema})`,
-    ).run();
+        CREATE TRIGGER IF NOT EXISTS responses_ai AFTER INSERT ON responses BEGIN
+            INSERT INTO responses_fts(rowid, id, conversation_id, prompt, response)
+            VALUES (new.rowid, new.id, new.conversation_id, new.prompt, new.response);
+        END;
 
-    db.prepare(`CREATE TABLE IF NOT EXISTS responses (${responsesTableSchema})`)
-        .run();
+        CREATE TRIGGER IF NOT EXISTS responses_ad AFTER DELETE ON responses BEGIN
+            INSERT INTO responses_fts(responses_fts, rowid, id, conversation_id, prompt, response)
+            VALUES('delete', old.rowid, old.id, old.conversation_id, old.prompt, old.response);
+        END;
+
+        CREATE TRIGGER IF NOT EXISTS responses_au AFTER UPDATE ON responses BEGIN
+            INSERT INTO responses_fts(responses_fts, rowid, id, conversation_id, prompt, response)
+            VALUES('delete', old.rowid, old.id, old.conversation_id, old.prompt, old.response);
+            INSERT INTO responses_fts(rowid, id, conversation_id, prompt, response)
+            VALUES (new.rowid, new.id, new.conversation_id, new.prompt, new.response);
+        END;
+    `);
 }
 
 export function insert(
@@ -277,38 +296,88 @@ export async function findSimilarResponses(
     query: string,
     limit: number = 10,
     offset: number = 0,
+    searchType: "vector" | "text" | "combined" = "combined",
 ): Promise<SimilarResponse[]> {
-    const embeddingProvider = getEmbeddingProvider("");
-    const embeddingsRes = await embeddingProvider.doEmbed({
-        values: [query],
-    });
-    const queryEmbedding = Buffer.from(
-        new Float32Array(embeddingsRes.embeddings[0]).buffer,
-    );
+    let vectorResults: SimilarResponse[] = [];
+    let ftsResults: SimilarResponse[] = [];
 
-    const stmt = db.prepare(`
-        SELECT
-            e.id,
-            e.response_id,
-            e.type,
-            r.prompt,
-            r.response,
-            r.conversation_id,
-            r.model,
-            r.provider,
-            r.datetime_utc,
-            CASE
-                WHEN e.type = 'prompt' THEN r.prompt
-                ELSE r.response
-            END as text,
-            vec_distance_cosine(e.embedding, ?) as distance
-        FROM embeddings e
-        JOIN responses r ON e.response_id = r.id
-        ORDER BY distance
-        LIMIT ? OFFSET ?
-    `);
+    if (searchType === "vector" || searchType === "combined") {
+        const embeddingProvider = getEmbeddingProvider("nomic-embed-text");
+        const embeddingsRes = await embeddingProvider.doEmbed({
+            values: [query],
+        });
+        const queryEmbedding = Buffer.from(
+            new Float32Array(embeddingsRes.embeddings[0]).buffer,
+        );
 
-    return stmt.all(queryEmbedding, limit, offset) as SimilarResponse[];
+        vectorResults = db.prepare(`
+            WITH vector_matches AS (
+                SELECT
+                    e.id, e.response_id, e.type, r.prompt, r.response, r.conversation_id,
+                    r.model, r.provider, r.datetime_utc,
+                    CASE WHEN e.type = 'prompt' THEN r.prompt ELSE r.response END as text,
+                    vec_distance_cosine(e.embedding, ?) as distance
+                FROM embeddings e
+                JOIN responses r ON e.response_id = r.id
+                ORDER BY distance
+                LIMIT ?
+            )
+            SELECT * FROM vector_matches
+        `).all(queryEmbedding, limit * 2) as SimilarResponse[];
+    }
+
+    if (searchType === "text" || searchType === "combined") {
+        ftsResults = db.prepare(`
+            WITH fts_matches AS (
+                SELECT
+                    NULL as id, r.id as response_id,
+                    CASE
+                        WHEN instr(r.prompt, ?) > 0 THEN 'prompt'
+                        ELSE 'response'
+                    END as type,
+                    r.prompt, r.response, r.conversation_id, r.model, r.provider, r.datetime_utc,
+                    CASE
+                        WHEN instr(r.prompt, ?) > 0 THEN r.prompt
+                        ELSE r.response
+                    END as text,
+                    bm25(responses_fts) as distance
+                FROM responses_fts
+                JOIN responses r ON responses_fts.id = r.id
+                WHERE responses_fts MATCH ?
+                ORDER BY distance
+                LIMIT ?
+            )
+            SELECT * FROM fts_matches
+        `).all(query, query, query, limit * 2) as SimilarResponse[];
+    }
+
+    if (searchType === "combined") {
+        const maxVectorDist = Math.max(
+            ...vectorResults.map((r) => r.distance),
+            1,
+        );
+        const maxFtsDist = Math.max(...ftsResults.map((r) => r.distance), 1);
+
+        vectorResults.forEach((r) => {
+            r.distance /= maxVectorDist;
+        });
+        ftsResults.forEach((r) => {
+            r.distance /= maxFtsDist;
+        });
+    }
+
+    const seenIds = new Set<string>();
+    const combinedResults = [...vectorResults, ...ftsResults]
+        .sort((a, b) => a.distance - b.distance)
+        .filter((result) => {
+            if (!seenIds.has(result.response_id)) {
+                seenIds.add(result.response_id);
+                return true;
+            }
+            return false;
+        });
+
+    return combinedResults.slice(offset, offset + limit);
 }
 
 export default db;

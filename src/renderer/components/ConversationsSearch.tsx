@@ -2,7 +2,7 @@ import React from 'react';
 import { SimilarResponse } from "../types/types"
 import { useState } from "react";
 
-export function ConversationsSearch({ onSearchResults, onClearSearch }: {
+export function ConversationsSearch({ onSearchResults, onClearSearch, onResultSelect }: {
     onSearchResults: (results: SimilarResponse[]) => void;
     onClearSearch: () => void;
     onResultSelect: (responseId: string) => void;
@@ -13,7 +13,12 @@ export function ConversationsSearch({ onSearchResults, onClearSearch }: {
             onClearSearch();
             return;
         }
-        const results = await window.api.findSimilarResponses(query);
+        const results = await window.api.findSimilarResponses({
+            query: query.trim(),
+            searchType: "combined",
+            limit: 10,
+            offset: 0
+        });
         onSearchResults(results);
     };
 

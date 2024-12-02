@@ -65,18 +65,23 @@ contextBridge.exposeInMainWorld("api", {
             responseId,
         }),
     getModels: () => ipcRenderer.invoke("models:get"),
-    findSimilarResponses: (query: string) =>
-        ipcRenderer.invoke("search:find", query),
+    findSimilarResponses: (options: { query: string, searchType?: "vector" | "text" | "combined", limit?: number, offset?: number }) =>
+        invokeMessage("search:find", options),
     getSettings: () => {
-        console.log('Preload: Invoking settings:get')
-        return ipcRenderer.invoke("settings:get")
+        return invokeMessage("settings:get", {})
     },
     saveSettings: (
         settings: { providers: { name: string; apiKey: string }[] },
     ) => {
-        console.log('Preload: Invoking settings:save with settings:', settings)
-        return ipcRenderer.invoke("settings:save", settings)
+        return invokeMessage("settings:save", settings)
     },
+    admin: {
+        backfillFTSData: async () => {
+            return invokeMessage("admin:backfillFTSData", {});
+        },
+        backfillEmbeddings: async () => {
+            return invokeMessage("admin:backfillEmbeddings", {});
+        }
+    }
 });
 
-console.log("Preload script initialized");

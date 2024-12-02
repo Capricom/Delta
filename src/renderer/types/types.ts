@@ -63,6 +63,10 @@ export interface DbFunctions {
     getAllConversations: () => Conversation[];
 }
 
+export interface AdminFunctions {
+    backfillFTSData: () => Promise<void>;
+}
+
 export interface SimilarResponse {
     id: number;
     response_id: string;

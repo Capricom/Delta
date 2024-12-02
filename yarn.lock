@@ -373,12 +373,27 @@
     fs-extra "^10.0.0"
     got "^11.8.5"
 
+"@electron-forge/plugin-auto-unpack-natives@^7.6.0":
+  version "7.6.0"
+  resolved "https://registry.npmjs.org/@electron-forge/plugin-auto-unpack-natives/-/plugin-auto-unpack-natives-7.6.0.tgz"
+  integrity sha512-rSWRLJinRIxtlkLke0uJzOLksRnXszu3hZrzlgOWChDuMFM298yb6gxWAjYh94VoNxXrUHl9Cd4ia/5+wgPwwg==
+  dependencies:
+    "@electron-forge/plugin-base" "7.6.0"
+    "@electron-forge/shared-types" "7.6.0"
+
 "@electron-forge/plugin-base@7.5.0":
   version "7.5.0"
   resolved "https://registry.npmjs.org/@electron-forge/plugin-base/-/plugin-base-7.5.0.tgz"
   integrity sha512-44AbXSb5lDY8uHIo0mJ91atOSWgxv3iuECk07/gDBiuMPX62dwHnLteEjQF4GBXJZTpnV7SxhD+d2AUBQmoojw==
   dependencies:
     "@electron-forge/shared-types" "7.5.0"
+
+"@electron-forge/plugin-base@7.6.0":
+  version "7.6.0"
+  resolved "https://registry.npmjs.org/@electron-forge/plugin-base/-/plugin-base-7.6.0.tgz"
+  integrity sha512-9llu4algWZJAJFVVZtd/Xa71c0QVxRmoMrpHX2SB+XJ+ZlFVdXrlnhn2hc/CnM0by9cBElyAL3cx3533OKS7lA==
+  dependencies:
+    "@electron-forge/shared-types" "7.6.0"
 
 "@electron-forge/plugin-fuses@^7.5.0":
   version "7.5.0"
@@ -417,6 +432,16 @@
     "@electron-forge/tracer" "7.5.0"
     "@electron/packager" "^18.3.5"
     "@electron/rebuild" "^3.2.10"
+    listr2 "^7.0.2"
+
+"@electron-forge/shared-types@7.6.0":
+  version "7.6.0"
+  resolved "https://registry.npmjs.org/@electron-forge/shared-types/-/shared-types-7.6.0.tgz"
+  integrity sha512-qpJRaPo/tx/+t3iFdUWnK4Tk/elo+Izk3yS+BhzfaF0XOK8wS+NNYW4vycK6eVMxN3Yu7/924MQFtPlCKlWHvA==
+  dependencies:
+    "@electron-forge/tracer" "7.6.0"
+    "@electron/packager" "^18.3.5"
+    "@electron/rebuild" "^3.7.0"
     listr2 "^7.0.2"
 
 "@electron-forge/template-base@7.5.0":
@@ -470,6 +495,13 @@
   version "7.5.0"
   resolved "https://registry.npmjs.org/@electron-forge/tracer/-/tracer-7.5.0.tgz"
   integrity sha512-1dE0wKCmv/K3BXCH70o2jp/y2kXgZQm73gIvzyadySXYwu2L4BWxhAO+Q+JsnbUk+nclHEup5ph4D0JoPIWLcQ==
+  dependencies:
+    chrome-trace-event "^1.0.3"
+
+"@electron-forge/tracer@7.6.0":
+  version "7.6.0"
+  resolved "https://registry.npmjs.org/@electron-forge/tracer/-/tracer-7.6.0.tgz"
+  integrity sha512-Rn76RHqNhLyZDnu+xY/X73+bv+Q09XKaZBL/WvlYBbvrrHe26NOHJ3IHXxkWRokSWd4B7lOGLGKm3j1Il8dVbQ==
   dependencies:
     chrome-trace-event "^1.0.3"
 
@@ -594,7 +626,7 @@
     semver "^7.1.3"
     yargs-parser "^21.1.1"
 
-"@electron/rebuild@^3.2.10", "@electron/rebuild@^3.7.1":
+"@electron/rebuild@^3.2.10", "@electron/rebuild@^3.7.0", "@electron/rebuild@^3.7.1":
   version "3.7.1"
   resolved "https://registry.npmjs.org/@electron/rebuild/-/rebuild-3.7.1.tgz"
   integrity sha512-sKGD+xav4Gh25+LcLY0rjIwcCFTw+f/HU1pB48UVbwxXXRGaXEqIH0AaYKN46dgd/7+6kuiDXzoyAEvx1zCsdw==

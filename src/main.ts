@@ -8,6 +8,7 @@ import { setupConversationsHandlers } from "./main/conversations";
 import { setupSearchHandlers } from "./main/search";
 import { setupModelsHandlers } from "./main/models";
 import { setupSettingsHandlers } from "./main/settings";
+import { setupAdminHandlers } from "./main/admin";
 
 app.name = "Delta";
 
@@ -22,6 +23,7 @@ const registerIpcHandlers = () => {
   setupConversationsHandlers();
   setupModelsHandlers();
   setupSearchHandlers();
+  setupAdminHandlers();
 };
 
 const initLocalStorage = async () => {

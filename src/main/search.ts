@@ -1,10 +1,17 @@
 import { ipcMain } from "electron";
-import { findSimilarResponses } from "./db";
+import {findSimilarResponses } from "./db";
 
-const searchResponsesHandler = async (_event: any, query: string) => {
+interface SearchOptions {
+    query: string;
+    searchType?: "vector" | "text" | "combined";
+    limit?: number;
+    offset?: number;
+}
+
+const searchResponsesHandler = async (_event: any, options: SearchOptions) => {
     try {
-        const results = await findSimilarResponses(query);
-        return results;
+        const { query, searchType = "combined", limit = 10, offset = 0 } = options;
+        return await findSimilarResponses(query, limit, offset, searchType);
     } catch (error) {
         console.error("Error searching responses:", error);
         throw new Error("Failed to search responses");

@@ -1,5 +1,5 @@
 import { Message } from "ai";
-import { Conversation, Response, SimilarResponse } from "./types";
+import { Conversation, Response, SimilarResponse, Settings, AdminFunctions } from "./types";
 
 interface IElectronAPI {
     test: (data: string) => Promise<void>;
@@ -28,13 +28,12 @@ interface IElectronAPI {
         responseId: string,
     ) => Promise<{ success: boolean }>;
     getModels: () => Promise<{ modelsByProvider: Record<string, string[]> }>;
-    findSimilarResponses: (query: string) => Promise<SimilarResponse[]>;
-    getSettings: () => Promise<
-        { providers: { name: string; apiKey: string }[] }
-    >;
+    findSimilarResponses: (options: { query: string, searchType?: "vector" | "text" | "combined", limit?: number, offset?: number }) => Promise<SimilarResponse[]>;
+    getSettings: () => Promise<Settings>;
     saveSettings: (
         settings: { providers: { name: string; apiKey: string }[] },
     ) => Promise<boolean>;
+    admin: AdminFunctions;
 }
 
 declare global {
