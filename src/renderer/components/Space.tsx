@@ -3,23 +3,21 @@ import { useEffect, useCallback, useState } from "react";
 import {
     ReactFlow,
     Node,
-    Edge,
     Controls,
     MiniMap,
     useReactFlow,
 } from '@xyflow/react';
+import { Response, SpaceProps } from '../types/types';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { ArrowLeft, ArrowRight, Maximize2, Minimize2, Menu, SettingsIcon } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 import ChatInterface from "./ChatInterface";
-import NodeContent from "./NodeContent";
 import Sidebar from "./Sidebar";
 import '@xyflow/react/dist/style.css';
-import { ExpandedState, SpaceProps, Response, Settings } from "../types/types"
-import { useSpaceLayout } from "../hooks/useSpaceLayout";
 import { useSpaceState } from "../hooks/useSpaceState";
 import { Message } from "ai/react";
 import { useChat } from '../hooks/useChat';
+import { useFlowManagement } from '../hooks/useFlowManagement';
 
 export enum ResizeTrigger {
     CONVERSATION_SWITCH = 'conversation_switch',
@@ -28,15 +26,6 @@ export enum ResizeTrigger {
     NONE = 'none'
 }
 
-const FLOW_CONFIG = {
-    nodeWidth: 550,
-    nodeHeight: 150,
-    nodeSpacingX: 200,
-    nodeSpacingY: 250,
-    rankSeparation: 300,
-    edgeCurvature: 0.75
-} as const;
-
 const createMessageAnnotations = (response: Response) => [
     { field: "responseId", id: response.id },
     { field: "conversationId", id: response.conversation_id },
@@ -44,20 +33,6 @@ const createMessageAnnotations = (response: Response) => [
     { field: "provider", id: response.provider },
     { field: "temperature", id: response.temperature.toString() },
     { field: "topP", id: response.top_p.toString() }
-];
-
-const createMessagePair = (response: Response) => [
-    {
-        role: "user",
-        content: response.prompt,
-        experimental_attachments: response.attachments || [],
-        annotations: createMessageAnnotations(response)
-    },
-    {
-        role: "assistant",
-        content: response.response,
-        annotations: createMessageAnnotations(response)
-    }
 ];
 
 const buildMessageChain = (responses: Response[], startResponse: Response): Message[] => {
@@ -110,6 +85,7 @@ export default function Space({ responses,
 
     const reactFlowInstance = useReactFlow();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
 
     const {
         nodes,
@@ -130,7 +106,7 @@ export default function Space({ responses,
         setDroppedImages,
         chatTextareaRef,
     } = useSpaceState();
-    const layout = useSpaceLayout();
+
 
     const { messages, input, handleInputChange, handleSubmit, setMessages, reload, error } = useChat({
         body: {
@@ -153,12 +129,32 @@ export default function Space({ responses,
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-    const toggleNodeState = useCallback((nodeId: string, key: keyof ExpandedState) => {
-        setExpandedNodes(prev => ({
-            ...prev,
-            [nodeId]: { ...(prev[nodeId] || {}), [key]: !(prev[nodeId]?.[key]) }
-        }));
-    }, []);
+    const handleDeleteResponse = useCallback(async (responseId: string) => {
+        const deleteResponses = async (id: string) => {
+            await window.api.deleteResponse(responses[0].conversation_id, id);
+
+            const children = responses.filter(r => r.parent_id === id);
+            for (const child of children) {
+                await deleteResponses(child.id);
+            }
+        };
+
+        await deleteResponses(responseId);
+        fetchResponses(responses[0].conversation_id);
+    }, [responses, fetchResponses]);
+
+    const { updateNodesAndEdges } = useFlowManagement({
+        responses,
+        expandedNodes,
+        selectedResponseId,
+        systemPrompt,
+        setExpandedNodes,
+        setNodes,
+        setEdges,
+        handleDeleteResponse,
+        resizeTrigger,
+        setResizeTrigger,
+    });
 
     const onRegenerateClick = useCallback(async (message: any) => {
         const responseId = message.annotations?.find((a: any) => a.field === "responseId")?.id;
@@ -186,21 +182,6 @@ export default function Space({ responses,
         focusChatTextArea()
     }, []);
 
-    const handleDeleteResponse = useCallback(async (responseId: string) => {
-        const deleteResponses = async (id: string) => {
-            console.log("Deleting response", id);
-            await window.api.deleteResponse(responses[0].conversation_id, id);
-
-            const children = responses.filter(r => r.parent_id === id);
-            for (const child of children) {
-                await deleteResponses(child.id);
-            }
-        };
-
-        await deleteResponses(responseId);
-        fetchResponses(responses[0].conversation_id);
-    }, [responses, fetchResponses]);
-
     useHotkeys('alt+s', () => setSidebarOpen(prev => !prev), []);
     useHotkeys('alt+f', () => {
         setIsFullScreen(prev => prev === 'flow' ? 'none' : 'flow');
@@ -214,118 +195,6 @@ export default function Space({ responses,
         focusChatTextArea();
     }, { preventDefault: true });
     useHotkeys('alt+e', () => setIsSettingsModalOpen(prev => !prev), []);
-
-    const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
-
-    const createSystemNode = (systemPromptText: string): Node => ({
-        id: 'system-prompt',
-        type: 'default',
-        position: { x: 0, y: 0 },
-        data: {
-            label: <div className="p-4 bg-gray-800 rounded-lg text-left">
-                <div className="text-sm text-gray-400">System Prompt</div>
-                <div className="mt-2">{systemPromptText}</div>
-            </div>
-        },
-        style: { width: FLOW_CONFIG.nodeWidth, height: 'auto' },
-    });
-
-    const createResponseNode = (
-        response: Response,
-        expandedNodes: Record<string, ExpandedState>,
-        selectedResponseId: string | null,
-        handleDeleteResponse: (id: string) => void
-    ): Node => ({
-        id: response.id,
-        type: 'default',
-        position: { x: 0, y: 0 },
-        data: {
-            label: <NodeContent
-                nodeId={response.id}
-                response={response}
-                expanded={expandedNodes[response.id] || {
-                    prompt: false,
-                    response: false,
-                    promptRaw: false,
-                    responseRaw: false
-                }}
-                setExpandedNodes={setExpandedNodes}
-                onDelete={handleDeleteResponse}
-            />,
-            response,
-        },
-        style: { width: FLOW_CONFIG.nodeWidth, height: 'auto' },
-        selected: response.id === selectedResponseId
-    });
-
-    const createEdge = (source: string, target: string): Edge => ({
-        id: `edge-${source}-${target}`,
-        source,
-        target,
-    });
-
-    const updateNodesAndEdges = async () => {
-
-        const newNodes: Node[] = [];
-        const newEdges: Edge[] = [];
-        const responseMap = new Map<string, Node>();
-
-        // Handle system prompt - modified to always show if exists
-        const systemPromptText = responses[0]?.system ?? (responses.length > 0 ? '' : systemPrompt);
-        if (systemPromptText) {
-            const systemNode = createSystemNode(systemPromptText);
-            newNodes.push(systemNode);
-            responseMap.set('system-prompt', systemNode);
-        }
-
-        // Create response nodes - removed sorting as responses should maintain their order
-        responses.forEach(response => {
-            const node = createResponseNode(response, expandedNodes, selectedResponseId, handleDeleteResponse);
-            newNodes.push(node);
-            responseMap.set(response.id, node);
-        });
-
-        // Create edges - modified to ensure proper connections
-        responses.forEach(response => {
-            if (response.parent_id) {
-                if (responseMap.has(response.parent_id)) {
-                    newEdges.push(createEdge(response.parent_id, response.id));
-                }
-            } else if (systemPromptText) {
-                newEdges.push(createEdge('system-prompt', response.id));
-            }
-        });
-
-        const result = await layout.getLayoutedElements(newNodes, newEdges);
-        if (result) {
-            const { nodes: layoutedNodes, edges: layoutedEdges } = result;
-            setNodes(layoutedNodes);
-            setEdges(layoutedEdges);
-            // Handle viewport updates
-            if (selectedResponseId) {
-                const selectedNode = layoutedNodes.find(node => node.id === selectedResponseId);
-                if (selectedNode) {
-                    setTimeout(() => {
-                        reactFlowInstance.setCenter(
-                            selectedNode.position.x + FLOW_CONFIG.nodeWidth / 2,
-                            selectedNode.position.y + FLOW_CONFIG.nodeHeight / 2,
-                            { zoom: 0.85, duration: 400 }
-                        );
-                        setSelectedResponseId(null);
-                    }, 150);
-                }
-            } else if (resizeTrigger === ResizeTrigger.CONVERSATION_SWITCH) {
-                setTimeout(() => {
-                    reactFlowInstance.fitView({ padding: 0.25, duration: 400 });
-                }, 150);
-            }
-        }
-
-
-
-        setResizeTrigger(ResizeTrigger.NONE);
-    };
-
 
     useEffect(() => {
         updateNodesAndEdges();
