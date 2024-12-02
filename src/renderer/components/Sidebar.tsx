@@ -17,6 +17,8 @@ interface SidebarProps {
     onSearchResultSelect: (responseId: string) => void;
     systemPrompt: string;
     setSystemPrompt: (prompt: string) => void;
+    setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
+    focusChatTextArea: () => void;
 }
 
 export default function Sidebar({
@@ -32,6 +34,8 @@ export default function Sidebar({
     onSearchResultSelect,
     systemPrompt,
     setSystemPrompt,
+    setIsFullScreen,
+    focusChatTextArea,
 }: SidebarProps) {
     const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
     const [isConversationsOpen, setIsConversationsOpen] = useState(true);
@@ -92,23 +96,22 @@ export default function Sidebar({
                             </div>
                         </div>
                         {isConversationsOpen && (
-                            <div className="bg-white/50 dark:bg-gray-900/50">
+                            <div className="p-4">
                                 <ConversationsList
                                     conversations={conversations}
-                                    onSelect={(conversationId: string, responseId?: string) => {
+                                    onSelect={(conversationId, responseId) => {
                                         fetchResponses(conversationId);
-                                        const conversation = conversations.find((c: { id: string; }) => c.id === conversationId);
-                                        if (conversation) {
-                                            setMessages([]);
-                                            setExpandedNodes({});
-                                            setResizeTrigger(ResizeTrigger.CONVERSATION_SWITCH);
-                                            if (responseId) {
-                                                onSearchResultSelect(responseId);
-                                            }
+                                        setMessages([]);
+                                        setExpandedNodes([]);
+                                        setResizeTrigger(ResizeTrigger.CONVERSATION_SWITCH);
+                                        if (responseId) {
+                                            onSearchResultSelect(responseId );
                                         }
                                     }}
                                     onDelete={fetchConversations}
                                     onNew={handleNewConversation}
+                                    setIsFullScreen={setIsFullScreen}
+                                    focusChatTextArea={focusChatTextArea}
                                 />
                             </div>
                         )}

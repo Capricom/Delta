@@ -167,6 +167,8 @@ export default function Space({ responses,
                 onSearchResultSelect={onSearchResultSelect}
                 systemPrompt={systemPrompt}
                 setSystemPrompt={setSystemPrompt}
+                setIsFullScreen={setIsFullScreen}
+                focusChatTextArea={focusChatTextArea}
             />
             {isSidebarOpen && (
                 <div className="absolute top-4 right-4">

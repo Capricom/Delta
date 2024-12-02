@@ -5,11 +5,13 @@ import { Trash2, Check, X, Bot, User, MessageSquare } from 'lucide-react';
 import { ConversationsSearch } from "./ConversationsSearch";
 import { formatDateTime } from '../services/datetime';
 
-function ConversationsList({ conversations, onSelect, onDelete, onNew }: {
+function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFullScreen, focusChatTextArea }: {
     conversations: Conversation[];
     onSelect: (conversationId: string, responseId?: string) => void;
     onDelete: () => void;
     onNew: () => void;
+    setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
+    focusChatTextArea: () => void;
 }) {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [searchResults, setSearchResults] = useState<SimilarResponse[] | null>(null);
@@ -42,6 +44,22 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew }: {
             </div>
 
             <div className="space-y-3">
+                {!searchResults && conversations?.length === 0 && (
+                    <div 
+                        onClick={() => {
+                            onNew();
+                            setIsFullScreen('none');
+                            setTimeout(() => {
+                                focusChatTextArea();
+                            }, 0);
+                        }}
+                        className="flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50 bg-gray-50/30 dark:bg-gray-900/30 rounded-lg transition-all select-none"
+                    >
+                        <MessageSquare size={24} className="mb-3 text-gray-400 pointer-events-none" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 pointer-events-none">No conversations yet</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 pointer-events-none">Click here to start your first conversation</p>
+                    </div>
+                )}
                 {!searchResults && conversations?.length > 0 && conversations.map((conv) => (
                     <div
                         key={conv.id}
