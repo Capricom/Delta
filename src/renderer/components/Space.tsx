@@ -8,7 +8,6 @@ import {
     useReactFlow,
 } from '@xyflow/react';
 import { Response, SpaceProps } from '../types/types';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { ArrowLeft, ArrowRight, Maximize2, Minimize2, Menu, SettingsIcon } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 import ChatInterface from "./ChatInterface";
@@ -18,6 +17,7 @@ import { useSpaceState } from "../hooks/useSpaceState";
 import { Message } from "ai/react";
 import { useChat } from '../hooks/useChat';
 import { useFlowManagement } from '../hooks/useFlowManagement';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 export enum ResizeTrigger {
     CONVERSATION_SWITCH = 'conversation_switch',
@@ -86,6 +86,7 @@ export default function Space({ responses,
     const reactFlowInstance = useReactFlow();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     const {
         nodes,
@@ -107,7 +108,6 @@ export default function Space({ responses,
         chatTextareaRef,
     } = useSpaceState();
 
-
     const { messages, input, handleInputChange, handleSubmit, setMessages, reload, error } = useChat({
         body: {
             model: selectedModel,
@@ -126,8 +126,6 @@ export default function Space({ responses,
             }
         },
     });
-
-    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     const handleDeleteResponse = useCallback(async (responseId: string) => {
         const deleteResponses = async (id: string) => {
@@ -156,19 +154,6 @@ export default function Space({ responses,
         setResizeTrigger,
     });
 
-    const onRegenerateClick = useCallback(async (message: any) => {
-        const responseId = message.annotations?.find((a: any) => a.field === "responseId")?.id;
-        if (responseId) {
-            const clickedResponse = responses.find((r: Response) => r.id === responseId);
-            if (clickedResponse) {
-                const messageChain = buildMessageChain(responses, clickedResponse);
-                const messagesUpToUser = messageChain.slice(0, -1);
-                setMessages(messagesUpToUser);
-                reload(messagesUpToUser);
-            }
-        }
-    }, [responses, setMessages, reload]);
-
     const focusChatTextArea = () => {
         chatTextareaRef.current?.focus();
     }
@@ -182,39 +167,26 @@ export default function Space({ responses,
         focusChatTextArea()
     }, []);
 
-    useHotkeys('alt+s', () => setSidebarOpen(prev => !prev), []);
-    useHotkeys('alt+f', () => {
-        setIsFullScreen(prev => prev === 'flow' ? 'none' : 'flow');
-    }, []);
-    useHotkeys('alt+c', () => {
-        setIsFullScreen(prev => prev === 'chat' ? 'none' : 'chat');
-    }, []);
-    useHotkeys('alt+n', handleNewConversation, [handleNewConversation]);
-    useHotkeys('alt+l', (e) => {
-        e.preventDefault();
-        focusChatTextArea();
-    }, { preventDefault: true });
-    useHotkeys('alt+e', () => setIsSettingsModalOpen(prev => !prev), []);
+    useKeyboardShortcuts({
+        setSidebarOpen,
+        setIsFullScreen,
+        handleNewConversation,
+        focusChatTextArea,
+        setIsSettingsModalOpen,
+    });
 
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [responses]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [nodes.length]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [expandedNodes]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [selectedResponseId]);
-
-    useEffect(() => {
-        updateNodesAndEdges();
-    }, [systemPrompt]);
+    const onRegenerateClick = useCallback(async (message: any) => {
+        const responseId = message.annotations?.find((a: any) => a.field === "responseId")?.id;
+        if (responseId) {
+            const clickedResponse = responses.find((r: Response) => r.id === responseId);
+            if (clickedResponse) {
+                const messageChain = buildMessageChain(responses, clickedResponse);
+                const messagesUpToUser = messageChain.slice(0, -1);
+                setMessages(messagesUpToUser);
+                reload(messagesUpToUser);
+            }
+        }
+    }, [responses, setMessages, reload]);
 
     const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
         const clickedResponse = node.data.response as Response;
@@ -253,6 +225,26 @@ export default function Space({ responses,
             setMessages(newMessages);
         }
     }, [responses, setMessages]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [responses]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [nodes.length]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [expandedNodes]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [selectedResponseId]);
+
+    useEffect(() => {
+        updateNodesAndEdges();
+    }, [systemPrompt]);
 
     return (
         <div className="flex min-h-screen relative dark:bg-gray-900">
