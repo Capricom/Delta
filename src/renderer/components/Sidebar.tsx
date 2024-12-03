@@ -19,6 +19,7 @@ interface SidebarProps {
     setSystemPrompt: (prompt: string) => void;
     setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     focusChatTextArea: () => void;
+    selectedResponseId: string | null;
 }
 
 export default function Sidebar({
@@ -36,6 +37,7 @@ export default function Sidebar({
     setSystemPrompt,
     setIsFullScreen,
     focusChatTextArea,
+    selectedResponseId,
 }: SidebarProps) {
     const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
     const [isConversationsOpen, setIsConversationsOpen] = useState(true);
@@ -112,6 +114,7 @@ export default function Sidebar({
                                     onNew={handleNewConversation}
                                     setIsFullScreen={setIsFullScreen}
                                     focusChatTextArea={focusChatTextArea}
+                                    selectedConversationId={selectedResponseId}
                                 />
                             </div>
                         )}

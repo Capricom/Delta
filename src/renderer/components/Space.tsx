@@ -170,6 +170,7 @@ export default function Space({ responses,
                 setSystemPrompt={setSystemPrompt}
                 setIsFullScreen={setIsFullScreen}
                 focusChatTextArea={focusChatTextArea}
+                selectedResponseId={selectedResponseId}
             />
             {isSidebarOpen && (
                 <div className="absolute top-4 right-4">

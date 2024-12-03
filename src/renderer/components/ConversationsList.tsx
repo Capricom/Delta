@@ -5,13 +5,14 @@ import { Trash2, Check, X, Bot, User, MessageSquare } from 'lucide-react';
 import { ConversationsSearch } from "./ConversationsSearch";
 import { formatDateTime } from '../services/datetime';
 
-function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFullScreen, focusChatTextArea }: {
+function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFullScreen, focusChatTextArea, selectedConversationId }: {
     conversations: Conversation[];
     onSelect: (conversationId: string, responseId?: string) => void;
     onDelete: () => void;
     onNew: () => void;
     setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     focusChatTextArea: () => void;
+    selectedConversationId: string;
 }) {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [searchResults, setSearchResults] = useState<SimilarResponse[] | null>(null);
@@ -23,6 +24,10 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFull
                 await window.api.deleteConversation(id);
                 onDelete();
                 setDeletingId(null);
+                // Only clear selection if we're deleting the currently selected conversation
+                if (id === selectedConversationId) {
+                    onSelect('');
+                }
             } catch (error) {
                 console.error('Error deleting conversation:', error);
             }
