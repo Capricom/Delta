@@ -6,6 +6,8 @@ import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import { cp, mkdir } from "node:fs/promises";
+import path from "node:path";
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -57,6 +59,31 @@ const config: ForgeConfig = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  hooks: {
+    async packageAfterCopy(_forgeConfig, buildPath) {
+      const requiredNativePackages = [
+        "better-sqlite3",
+        "bindings",
+        "file-uri-to-path",
+        "sqlite-vec",
+        "sqlite-vec-darwin-arm64",
+      ];
+
+      const sourceNodeModulesPath = path.resolve(__dirname, "node_modules");
+      const destNodeModulesPath = path.resolve(buildPath, "node_modules");
+      await Promise.all(
+        requiredNativePackages.map(async (packageName) => {
+          await mkdir(destNodeModulesPath, { recursive: true });
+
+          await cp(
+            path.join(sourceNodeModulesPath, packageName),
+            path.join(destNodeModulesPath, packageName),
+            { recursive: true, preserveTimestamps: true },
+          );
+        }),
+      );
+    },
+  },
 };
 
 export default config;
