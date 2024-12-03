@@ -32,7 +32,7 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFull
     };
 
     return (
-        <div className="p-4">
+        <div>
             <div className="mb-6">
                 <ConversationsSearch
                     onSearchResults={(results: SimilarResponse[]) => {
@@ -45,7 +45,7 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFull
 
             <div className="space-y-3">
                 {!searchResults && conversations?.length === 0 && (
-                    <div 
+                    <div
                         onClick={() => {
                             onNew();
                             setIsFullScreen('none');

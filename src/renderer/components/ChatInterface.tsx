@@ -60,6 +60,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     scrollToBottom();
+    setEditingMessageId(null);
   }, [messages]);
 
   useEffect(() => {
@@ -114,7 +115,7 @@ export default function ChatInterface({
             key={i}
             className={`group flex items-start gap-2 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
           >
-            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className={`flex flex-col gap-1 ${editingMessageId === message.id ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}>
               {message.role === "assistant" && (
                 <button
                   onClick={(e) => {
@@ -203,7 +204,7 @@ export default function ChatInterface({
                       setEditingMessageId(null);
                     }
                   }}
-                  className="w-full bg-transparent text-white placeholder-blue-200 focus:outline-none resize-none overflow-hidden"
+                  className="w-full min-w-[inherit] bg-transparent text-white placeholder-blue-200 focus:outline-none resize-none overflow-hidden"
                 />
               ) : (
                 <div className="prose dark:prose-invert max-w-none prose-sm">
