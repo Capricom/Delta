@@ -171,6 +171,7 @@ export default function Space({ responses,
                 setIsFullScreen={setIsFullScreen}
                 focusChatTextArea={focusChatTextArea}
                 selectedResponseId={selectedResponseId}
+                setIsSettingsModalOpen={setIsSettingsModalOpen}
             />
             {isSidebarOpen && (
                 <div className="absolute top-4 right-4">

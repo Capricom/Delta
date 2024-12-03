@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, ChevronDown, ChevronRight, GitFork, Plus } from 'lucide-react';
+import { Menu, ChevronDown, ChevronRight, GitFork, Plus, Settings } from 'lucide-react';
 import ConversationsList from "./ConversationsList";
 import { useState } from 'react';
 import { ResizeTrigger } from './Space';
@@ -20,6 +20,7 @@ interface SidebarProps {
     setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     focusChatTextArea: () => void;
     selectedResponseId: string | null;
+    setIsSettingsModalOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export default function Sidebar({
@@ -38,6 +39,7 @@ export default function Sidebar({
     setIsFullScreen,
     focusChatTextArea,
     selectedResponseId,
+    setIsSettingsModalOpen,
 }: SidebarProps) {
     const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
     const [isConversationsOpen, setIsConversationsOpen] = useState(true);
@@ -50,11 +52,18 @@ export default function Sidebar({
                         <GitFork size={20} className="rotate-180 text-gray-900 dark:text-gray-200" />
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-200">Delta</h2>
                     </div>
-                    <Menu
-                        className="cursor-pointer hover:opacity-70 transition-opacity text-gray-900 dark:text-gray-200"
-                        onClick={() => setSidebarOpen(!isSidebarOpen)}
-                        size={20}
-                    />
+                    <div className="flex items-center gap-2">
+                        <Settings
+                            className="cursor-pointer hover:opacity-70 transition-opacity text-gray-900 dark:text-gray-200"
+                            onClick={() => setIsSettingsModalOpen(prev => !prev)}
+                            size={20}
+                        />
+                        <Menu
+                            className="cursor-pointer hover:opacity-70 transition-opacity text-gray-900 dark:text-gray-200"
+                            onClick={() => setSidebarOpen(!isSidebarOpen)}
+                            size={20}
+                        />
+                    </div>
                 </div>
                 <div className="space-y-4">
                     <div className="border-y border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -107,7 +116,7 @@ export default function Sidebar({
                                         setExpandedNodes([]);
                                         setResizeTrigger(ResizeTrigger.CONVERSATION_SWITCH);
                                         if (responseId) {
-                                            onSearchResultSelect(responseId );
+                                            onSearchResultSelect(responseId);
                                         }
                                     }}
                                     onDelete={fetchConversations}
