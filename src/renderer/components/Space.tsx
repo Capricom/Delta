@@ -138,6 +138,7 @@ export default function Space({ responses,
         onMessageClick,
         onSearchResultSelect,
         onRegenerateClick,
+        onEditMessage,
     } = useMessageManagement({
         responses,
         setMessages,
@@ -260,6 +261,7 @@ export default function Space({ responses,
                         setDroppedImages={setDroppedImages}
                         error={error}
                         chatTextareaRef={chatTextareaRef}
+                        onEditMessage={onEditMessage}
                     />
                     <div className="absolute top-4 left-4">
                         {isFullScreen === 'none' ? (

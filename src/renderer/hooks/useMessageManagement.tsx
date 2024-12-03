@@ -117,11 +117,38 @@ export function useMessageManagement({
         }
     }, [responses, setMessages, reload]);
 
+    const onEditMessage = useCallback(async (message: any, newContent: string) => {
+        const responseId = message.annotations?.find((a: any) => a.field === "responseId")?.id;
+        if (responseId && reload) {
+            const clickedResponse = responses.find((r: Response) => r.id === responseId);
+            if (clickedResponse) {
+                // Create a new message chain up to the edited message
+                const messageChain = buildMessageChain(responses, clickedResponse);
+                const messagesUpToEdit = messageChain.slice(0, -2); // Remove both assistant and user message
+                
+                // Create a new message with edited content
+                const editedMessage: Message = {
+                    id: `user-edit-${Date.now()}`,
+                    createdAt: new Date(),
+                    role: "user",
+                    content: newContent,
+                    experimental_attachments: message.experimental_attachments,
+                    annotations: createMessageAnnotations(clickedResponse)
+                };
+                
+                // Set messages and trigger reload for new assistant response
+                setMessages([...messagesUpToEdit, editedMessage]);
+                reload([...messagesUpToEdit, editedMessage]);
+            }
+        }
+    }, [responses, setMessages, reload]);
+
     return {
         onNodeClick,
         onMessageClick,
         onSearchResultSelect,
         onRegenerateClick,
+        onEditMessage,
         buildMessageChain,
     };
 }

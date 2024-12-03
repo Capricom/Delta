@@ -2,19 +2,15 @@ import { ipcMain } from "electron";
 import db from "./db";
 import { getEmbeddingProvider } from "./models";
 
-// Function to backfill FTS data for all responses
 async function backfillFTSData(): Promise<void> {
     try {
-        // First, clear the FTS table to ensure clean rebuild
         db.prepare(`DELETE FROM responses_fts WHERE 1=1`).run();
 
-        // Get all responses to rebuild FTS
         const responses = db.prepare(`
             SELECT rowid, id, conversation_id, prompt, response
             FROM responses
         `).all();
 
-        // Insert FTS data for each response
         const insertStmt = db.prepare(`
             INSERT INTO responses_fts(rowid, id, conversation_id, prompt, response)
             VALUES (?, ?, ?, ?, ?)
@@ -27,13 +23,15 @@ async function backfillFTSData(): Promise<void> {
                     response.id,
                     response.conversation_id,
                     response.prompt,
-                    response.response
+                    response.response,
                 );
             }
         });
 
         transaction(responses);
-        console.log(`Successfully backfilled FTS data for ${responses.length} responses`);
+        console.log(
+            `Successfully backfilled FTS data for ${responses.length} responses`,
+        );
     } catch (error) {
         console.error("Error backfilling FTS data:", error);
         throw error;

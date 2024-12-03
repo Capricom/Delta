@@ -1,11 +1,10 @@
 import React from 'react';
-import { Copy, Download, Settings, RotateCw } from 'lucide-react';
+import { Copy, Download, Settings, RotateCw, SquarePen, Check, X } from 'lucide-react';
 import MarkdownWithSyntax from './MarkdownWithSyntax';
 import { useState, useRef, useEffect, Key } from 'react';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
 import { Message } from 'ai';
-
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -21,6 +20,7 @@ interface ChatInterfaceProps {
   topP: number;
   setTopP: (topP: number) => void;
   onRegenerateClick: (message: any) => void;
+  onEditMessage: (message: any, newContent: string) => void;
   droppedImages: string[];
   setDroppedImages: (images: string[]) => void;
   error?: Error;
@@ -41,6 +41,7 @@ export default function ChatInterface({
   topP,
   setTopP,
   onRegenerateClick,
+  onEditMessage,
   droppedImages,
   setDroppedImages,
   error,
@@ -48,8 +49,10 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,6 +61,15 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (editTextareaRef.current) {
+      editTextareaRef.current.focus();
+      editTextareaRef.current.setSelectionRange(editContent.length, editContent.length);
+      editTextareaRef.current.style.height = 'auto';
+      editTextareaRef.current.style.height = `${editTextareaRef.current.scrollHeight}px`;
+    }
+  }, [editingMessageId, editContent]);
 
   const handleDownload = () => {
     if (messages.length === 0) return;
@@ -85,6 +97,7 @@ export default function ChatInterface({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
   return (
     <div className="flex flex-col h-screen dark:bg-gray-900">
       {error && (
@@ -99,18 +112,101 @@ export default function ChatInterface({
         {messages.map((message: any, i: number) => (
           <div
             key={i}
-            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            onClick={() => onMessageClick(message)}
-            style={{ cursor: 'pointer' }}
+            className={`group flex items-start gap-2 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
           >
+            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {message.role === "assistant" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRegenerateClick(message);
+                  }}
+                  className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-all text-gray-500 dark:text-gray-400"
+                >
+                  <RotateCw size={14} />
+                </button>
+              )}
+              {message.role === "user" && (
+                <>
+                  {!editingMessageId && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingMessageId(message.id);
+                        setEditContent(message.content);
+                      }}
+                      className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-all text-gray-500 dark:text-gray-400"
+                    >
+                      <SquarePen size={14} />
+                    </button>
+                  )}
+                  {editingMessageId === message.id && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditMessage(message, editContent);
+                          setEditingMessageId(null);
+                        }}
+                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-all text-gray-500 dark:text-gray-400"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingMessageId(null);
+                        }}
+                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-all text-gray-500 dark:text-gray-400"
+                      >
+                        <X size={14} />
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(message.content);
+                }}
+                className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-all text-gray-500 dark:text-gray-400"
+              >
+                <Copy size={14} />
+              </button>
+            </div>
+
             <div
-              className={`group relative max-w-[80%] rounded-2xl px-4 py-2 ${message.role === "user"
+              onClick={() => onMessageClick(message)}
+              style={{ cursor: 'pointer' }}
+              className={`max-w-[80%] rounded-2xl px-4 py-2 ${message.role === "user"
                 ? "bg-blue-500 text-white rounded-br-none"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
                 }`}
             >
-              <div className="flex justify-between items-start">
-                <div className="prose dark:prose-invert max-w-none prose-sm transition-opacity will-change-opacity pr-1">
+              {message.role === "user" && editingMessageId === message.id ? (
+                <textarea
+                  ref={editTextareaRef}
+                  value={editContent}
+                  onChange={(e) => {
+                    setEditContent(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      onEditMessage(message, editContent);
+                      setEditingMessageId(null);
+                    }
+                    if (e.key === "Escape") {
+                      setEditingMessageId(null);
+                    }
+                  }}
+                  className="w-full bg-transparent text-white placeholder-blue-200 focus:outline-none resize-none overflow-hidden"
+                />
+              ) : (
+                <div className="prose dark:prose-invert max-w-none prose-sm">
                   {message.experimental_attachments?.map((attachment: string, index: Key | null | undefined) => (
                     <img
                       key={index?.toString()}
@@ -125,33 +221,7 @@ export default function ChatInterface({
                   ))}
                   <MarkdownWithSyntax>{message.content}</MarkdownWithSyntax>
                 </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity will-change-opacity transform-gpu flex gap-1">
-                  {message.role === "assistant" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRegenerateClick(message);
-                      }}
-                      className="p-1 hover:bg-gray-600/50 dark:hover:bg-gray-500/50 rounded transition-all text-gray-700 dark:text-gray-300"
-                    >
-                      <RotateCw size={16} />
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(message.content);
-                    }}
-                    className={`p-1 rounded transition-all ${
-                      message.role === "user"
-                        ? "hover:bg-blue-600/50 text-white"
-                        : "hover:bg-gray-600/50 dark:hover:bg-gray-500/50 text-gray-700 dark:text-gray-300"
-                    }`}
-                  >
-                    <Copy size={16} />
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ))}
