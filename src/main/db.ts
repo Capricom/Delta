@@ -1,5 +1,5 @@
 import { getEmbeddingProvider } from "./models";
-import Database, { RunResult } from "better-sqlite3";
+import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
 import { deleteAttachment, getAttachment } from "./storage";
 import { app } from "electron";
@@ -24,7 +24,17 @@ try {
 
 const DATABASE_PATH = join(DELTA_DATA_DIR, "delta.db");
 const db = new Database(DATABASE_PATH);
-sqliteVec.load(db);
+
+// Get the base path without extension
+let sqliteVecPath = sqliteVec.getLoadablePath().replace(/\.[^.]+$/, "");
+
+// If we're in a packaged app (asar), adjust the path
+if (sqliteVecPath.includes("app.asar")) {
+    sqliteVecPath = sqliteVecPath.replace("app.asar", "app.asar.unpacked");
+}
+
+console.log("Loading SQLite vector extension from:", sqliteVecPath);
+db.loadExtension(sqliteVecPath);
 
 export function ensureTable(): void {
     const attachmentsTableSchema = `

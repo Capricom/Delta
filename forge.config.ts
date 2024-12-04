@@ -11,10 +11,13 @@ import path from "node:path";
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true,
+    asar: {
+      unpack: "*.{node,dylib}",
+      unpackDir: "{better-sqlite3,sqlite-vec*,sqlite-vec-darwin-arm64}",
+    },
   },
   rebuildConfig: {
-    onlyModules: ["better-sqlite3"],
+    onlyModules: ["better-sqlite3", "sqlite-vec", "sqlite-vec-darwin-arm64"],
     force: true,
   },
   makers: [
@@ -71,15 +74,17 @@ const config: ForgeConfig = {
 
       const sourceNodeModulesPath = path.resolve(__dirname, "node_modules");
       const destNodeModulesPath = path.resolve(buildPath, "node_modules");
+
       await Promise.all(
         requiredNativePackages.map(async (packageName) => {
-          await mkdir(destNodeModulesPath, { recursive: true });
+          const sourcePath = path.join(sourceNodeModulesPath, packageName);
+          const destPath = path.join(destNodeModulesPath, packageName);
 
-          await cp(
-            path.join(sourceNodeModulesPath, packageName),
-            path.join(destNodeModulesPath, packageName),
-            { recursive: true, preserveTimestamps: true },
-          );
+          await mkdir(path.dirname(destPath), { recursive: true });
+          await cp(sourcePath, destPath, {
+            recursive: true,
+            preserveTimestamps: true,
+          });
         }),
       );
     },
