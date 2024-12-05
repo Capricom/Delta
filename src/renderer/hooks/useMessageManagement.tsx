@@ -11,6 +11,8 @@ interface UseMessageManagementProps {
     setIsFullScreen: (value: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     setSelectedResponseId: (responseId: string) => void;
     reactFlowInstance: any;
+    setSidebarOpen: (value: boolean) => void;
+    setIsSystemPromptOpen: (value: boolean) => void;
 }
 
 const createMessageAnnotations = (response: Response) => [
@@ -26,13 +28,11 @@ const buildMessageChain = (responses: Response[], startResponse: Response): Mess
     const messageChain: Response[] = [];
     let currentResponse: Response | undefined = startResponse;
 
-    // Build chain from current response up to root
     while (currentResponse) {
         messageChain.unshift(currentResponse);
         currentResponse = responses.find(r => r.id === currentResponse?.parent_id);
     }
 
-    // Convert responses to Message format
     return messageChain.flatMap(response => [
         {
             id: `user-${response.id}`,
@@ -63,15 +63,23 @@ export function useMessageManagement({
     setIsFullScreen,
     setSelectedResponseId,
     reactFlowInstance,
+    setSidebarOpen,
+    setIsSystemPromptOpen,
 }: UseMessageManagementProps) {
     const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+        if (node.id === 'system-prompt') {
+            setIsFullScreen('none');
+            setSidebarOpen(true);
+            setIsSystemPromptOpen(true);
+            return;
+        }
         const clickedResponse = node.data.response as Response;
         const newMessages = buildMessageChain(responses, clickedResponse);
         setMessages(newMessages);
         if (isFullScreen !== 'chat') {
             setIsFullScreen('none');
         }
-    }, [responses, setMessages, isFullScreen, setIsFullScreen]);
+    }, [responses, setMessages, isFullScreen, setIsFullScreen, setSidebarOpen, setIsSystemPromptOpen]);
 
     const onMessageClick = useCallback((message: any) => {
         const responseId = message.annotations?.find((a: any) => a.field === "responseId")?.id;

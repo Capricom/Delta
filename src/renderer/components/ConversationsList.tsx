@@ -9,7 +9,7 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFull
     conversations: Conversation[];
     onSelect: (conversationId: string, responseId?: string) => void;
     onDelete: () => void;
-    onNew: () => void;
+    onNew: (focusCallback?: () => void) => void;
     setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     focusChatTextArea: () => void;
     selectedConversationId: string;
@@ -52,11 +52,10 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFull
                 {!searchResults && conversations?.length === 0 && (
                     <div
                         onClick={() => {
-                            onNew();
-                            setIsFullScreen('none');
-                            setTimeout(() => {
+                            onNew(() => {
                                 focusChatTextArea();
-                            }, 0);
+                            });
+                            setIsFullScreen('none');
                         }}
                         className="flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-800/50 bg-gray-50/30 dark:bg-gray-900/30 rounded-lg transition-all select-none"
                     >

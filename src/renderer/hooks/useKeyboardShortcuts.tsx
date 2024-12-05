@@ -3,7 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 interface UseKeyboardShortcutsProps {
     setSidebarOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
     setIsFullScreen: (value: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
-    handleNewConversation: () => void;
+    handleNewConversation: (focusCallback?: () => void) => void;
     focusChatTextArea: () => void;
     setIsConfigModalOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
@@ -22,7 +22,10 @@ export function useKeyboardShortcuts({
     useHotkeys('alt+c', () => {
         setIsFullScreen(prev => prev === 'chat' ? 'none' : 'chat');
     }, []);
-    useHotkeys('alt+n', handleNewConversation, [handleNewConversation]);
+    useHotkeys('alt+n', (e) => {
+        e.preventDefault();
+        handleNewConversation();
+    }, { preventDefault: true });
     useHotkeys('alt+l', (e) => {
         e.preventDefault();
         focusChatTextArea();

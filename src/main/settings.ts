@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { app, ipcMain, safeStorage } from "electron";
+import { app, ipcMain } from "electron";
 
 type Provider = "openai" | "anthropic" | "google";
 
@@ -13,20 +13,10 @@ interface ApiKeys {
 
 export const PROVIDERS: Provider[] = ["openai", "anthropic", "google"];
 
-const encryptKey = (key: string, value: string): Buffer => {
-    return safeStorage.encryptString(JSON.stringify({ [key]: value }));
-};
-
-const decryptKey = (encrypted: Buffer): { key: string; value: string } => {
-    const decrypted = JSON.parse(safeStorage.decryptString(encrypted));
-    const key = Object.keys(decrypted)[0];
-    return { key, value: decrypted[key] };
-};
-
 const KEYS_FILE = path.join(
     app.getPath("userData"),
     "delta_data",
-    "encrypted-keys.json",
+    "config.json",
 );
 
 function loadKeys(): Record<string, string> {
@@ -43,24 +33,17 @@ function saveKeys(data: Record<string, string>) {
 
 export const apiKeys = {
     set: (key: keyof ApiKeys, value: string) => {
-        if (!safeStorage.isEncryptionAvailable()) {
-            throw new Error("Encryption is not available");
-        }
-        const encrypted = encryptKey(key.toString(), value);
         const data = loadKeys();
-        data[`api_keys.${key.toString()}`] = encrypted.toString("base64");
+        data[key.toString()] = value;
         saveKeys(data);
     },
     get: (key: keyof ApiKeys) => {
         const data = loadKeys();
-        const encrypted = data[`api_keys.${key.toString()}`] ||
-            data[key.toString()];
-        if (!encrypted) return undefined;
-        return decryptKey(Buffer.from(encrypted, "base64")).value;
+        return data[key.toString()];
     },
     delete: (key: keyof ApiKeys) => {
         const data = loadKeys();
-        delete data[`api_keys.${key.toString()}`];
+        delete data[key.toString()];
         saveKeys(data);
     },
 };
@@ -70,10 +53,7 @@ function getSettingsHandler(_event: any) {
         const data = loadKeys();
         const providers = PROVIDERS.map((name) => ({
             name,
-            apiKey: data[`api_keys.${name}`]
-                ? decryptKey(Buffer.from(data[`api_keys.${name}`], "base64"))
-                    .value
-                : "",
+            apiKey: data[name] || "",
         }));
         return { providers };
     } catch (error) {
@@ -89,12 +69,10 @@ async function saveSettingsHandler(
     try {
         const data = loadKeys();
         settings.providers.forEach(({ name, apiKey }) => {
-            const key = `api_keys.${name}`;
             if (apiKey) {
-                const encrypted = encryptKey(name, apiKey);
-                data[key] = encrypted.toString("base64");
+                data[name] = apiKey;
             } else {
-                delete data[key];
+                delete data[name];
             }
         });
         saveKeys(data);

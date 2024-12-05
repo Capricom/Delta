@@ -43,6 +43,7 @@ export default function Space({ responses,
 }: SpaceProps) {
     const reactFlowInstance = useReactFlow();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
     const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
@@ -116,14 +117,23 @@ export default function Space({ responses,
         chatTextareaRef.current?.focus();
     }
 
-    const handleNewConversation = useCallback(() => {
+    const handleNewConversation = useCallback((focusCallback?: () => void) => {
         setMessages([]);
         setNodes([]);
         setEdges([]);
         setResponses([]);
         setExpandedNodes({});
-        focusChatTextArea()
-    }, []);
+        if (isFullScreen !== 'chat') {
+            setIsFullScreen('none');
+        }
+        setTimeout(() => {
+            if (focusCallback) {
+                focusCallback();
+            } else {
+                focusChatTextArea();
+            }
+        }, 0);
+    }, [isFullScreen, setIsFullScreen, focusChatTextArea]);
 
     useKeyboardShortcuts({
         setSidebarOpen,
@@ -147,6 +157,8 @@ export default function Space({ responses,
         setIsFullScreen,
         setSelectedResponseId,
         reactFlowInstance,
+        setSidebarOpen,
+        setIsSystemPromptOpen,
     });
 
     useEffect(() => {
@@ -172,6 +184,9 @@ export default function Space({ responses,
                 focusChatTextArea={focusChatTextArea}
                 selectedResponseId={selectedResponseId}
                 setIsConfigModalOpen={setIsConfigModalOpen}
+                isSystemPromptOpen={isSystemPromptOpen}
+                setIsSystemPromptOpen={setIsSystemPromptOpen}
+                responses={responses}
             />
             {isSidebarOpen && (
                 <div className="absolute top-4 right-4">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Download, Settings, RotateCw, SquarePen, Check, X } from 'lucide-react';
+import { Copy, Download, Variable, RotateCw, SquarePen, Check, X, Settings } from 'lucide-react';
 import MarkdownWithSyntax from './MarkdownWithSyntax';
 import { useState, useRef, useEffect, Key } from 'react';
 import ChatInput from './ChatInput';
@@ -235,7 +235,7 @@ export default function ChatInterface({
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
             {Object.keys(modelsByProvider).length === 0 ? (
-              <div 
+              <div
                 onClick={() => setIsConfigModalOpen(true)}
                 className="w-full text-center p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg text-yellow-800 dark:text-yellow-200 cursor-pointer hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
               >
@@ -267,7 +267,7 @@ export default function ChatInterface({
                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] w-[40px] transition-all text-gray-700 dark:text-gray-300"
                 title="Model Settings"
               >
-                <Settings size={20} />
+                <Variable size={20} />
               </button>
               <button
                 type="button"
