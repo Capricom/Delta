@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { Settings } from '../types/types'
 import { X, Eye } from 'lucide-react';
 
-interface SettingsModalProps {
+interface ConfigModalProps {
     settings: Settings;
     updateProvider: (name: string, apiKey: string) => void;
     saveSettings: (settingsToSave: Settings) => Promise<boolean>;
     onClose: () => void;
 }
 
-export function SettingsModal({ settings, updateProvider, saveSettings, onClose }: SettingsModalProps) {
+export function ConfigModal({ settings, updateProvider, saveSettings, onClose }: ConfigModalProps) {
     const [isSaving, setIsSaving] = useState(false)
     const [localValues, setLocalValues] = useState<Record<string, string>>({})
     const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})

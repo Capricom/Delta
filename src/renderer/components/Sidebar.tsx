@@ -20,7 +20,7 @@ interface SidebarProps {
     setIsFullScreen: (state: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     focusChatTextArea: () => void;
     selectedResponseId: string | null;
-    setIsSettingsModalOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
+    setIsConfigModalOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export default function Sidebar({
@@ -39,7 +39,7 @@ export default function Sidebar({
     setIsFullScreen,
     focusChatTextArea,
     selectedResponseId,
-    setIsSettingsModalOpen,
+    setIsConfigModalOpen,
 }: SidebarProps) {
     const [isSystemPromptOpen, setIsSystemPromptOpen] = useState(false);
     const [isConversationsOpen, setIsConversationsOpen] = useState(true);
@@ -55,7 +55,7 @@ export default function Sidebar({
                     <div className="flex items-center gap-2">
                         <Settings
                             className="cursor-pointer hover:opacity-70 transition-opacity text-gray-900 dark:text-gray-200"
-                            onClick={() => setIsSettingsModalOpen(prev => !prev)}
+                            onClick={() => setIsConfigModalOpen(prev => !prev)}
                             size={20}
                         />
                         <Menu

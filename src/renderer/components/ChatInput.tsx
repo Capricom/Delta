@@ -9,6 +9,7 @@ interface ChatInputProps {
     textareaRef: React.RefObject<HTMLTextAreaElement>;
     droppedImages: string[];
     setDroppedImages: (images: string[]) => void;
+    disabled?: boolean;
 }
 
 export default function ChatInput({
@@ -18,6 +19,7 @@ export default function ChatInput({
     textareaRef,
     droppedImages,
     setDroppedImages,
+    disabled,
 }: ChatInputProps) {
     const [dragActive, setDragActive] = useState(false);
     const [showRemoveIndex, setShowRemoveIndex] = useState<number | null>(null);
@@ -91,7 +93,8 @@ export default function ChatInput({
                     onChange={(e) => handleInputChange({ target: { value: e.target.value } } as React.ChangeEvent<HTMLInputElement>)}
                     placeholder="Type a message..."
                     rows={1}
-                    className="flex-1 px-4 py-2 pr-14 bg-transparent focus:outline-none resize-none overflow-hidden rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    disabled={disabled}
+                    className="flex-1 px-4 py-2 pr-14 bg-transparent focus:outline-none resize-none overflow-hidden rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ minHeight: '40px' }}
                     onInput={(e) => {
                         const target = e.target as HTMLTextAreaElement;
@@ -122,13 +125,14 @@ export default function ChatInput({
                 />
                 <button
                     type="submit"
+                    disabled={disabled}
                     onClick={(e) => {
                         const textarea = e.currentTarget.parentElement?.querySelector('textarea');
                         if (textarea) {
                             textarea.style.height = '40px';
                         }
                     }}
-                    className="absolute right-2 bottom-[4px] bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none h-[32px] w-[32px] flex items-center justify-center rounded-full transition-colors"
+                    className="absolute right-2 bottom-[4px] bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none h-[32px] w-[32px] flex items-center justify-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 dark:disabled:hover:bg-blue-600"
                 >
                     <CircleArrowUp size={20} />
                 </button>

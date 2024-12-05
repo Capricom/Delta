@@ -25,6 +25,7 @@ interface ChatInterfaceProps {
   setDroppedImages: (images: string[]) => void;
   error?: Error;
   chatTextareaRef: React.RefObject<HTMLTextAreaElement>;
+  setIsConfigModalOpen: (open: boolean) => void;
 }
 
 export default function ChatInterface({
@@ -46,11 +47,13 @@ export default function ChatInterface({
   setDroppedImages,
   error,
   chatTextareaRef,
+  setIsConfigModalOpen,
 }: ChatInterfaceProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -231,23 +234,32 @@ export default function ChatInterface({
       <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <select
-              value={selectedModel}
-              onChange={(e) => {
-                setSelectedModel(e.target.value)
-              }}
-              className="w-full rounded-lg px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {Object.entries(modelsByProvider).map(([provider, models]) => (
-                <optgroup key={provider} label={provider}>
-                  {models.map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            {Object.keys(modelsByProvider).length === 0 ? (
+              <div 
+                onClick={() => setIsConfigModalOpen(true)}
+                className="w-full text-center p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg text-yellow-800 dark:text-yellow-200 cursor-pointer hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
+              >
+                Click here to open <Settings className="inline-block align-text-bottom" size={16} /> and add API keys to enable models.
+              </div>
+            ) : (
+              <select
+                value={selectedModel}
+                onChange={(e) => {
+                  setSelectedModel(e.target.value)
+                }}
+                className="w-full rounded-lg px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.entries(modelsByProvider).map(([provider, models]) => (
+                  <optgroup key={provider} label={provider}>
+                    {models.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            )}
             <div className="flex gap-2 ml-2">
               <button
                 type="button"
@@ -343,6 +355,7 @@ export default function ChatInterface({
           textareaRef={chatTextareaRef}
           droppedImages={droppedImages}
           setDroppedImages={setDroppedImages}
+          disabled={Object.values(modelsByProvider).flat().length === 0}
         />
       </form>
     </div>

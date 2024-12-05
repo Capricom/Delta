@@ -5,7 +5,7 @@ interface UseKeyboardShortcutsProps {
     setIsFullScreen: (value: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
     handleNewConversation: () => void;
     focusChatTextArea: () => void;
-    setIsSettingsModalOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
+    setIsConfigModalOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export function useKeyboardShortcuts({
@@ -13,7 +13,7 @@ export function useKeyboardShortcuts({
     setIsFullScreen,
     handleNewConversation,
     focusChatTextArea,
-    setIsSettingsModalOpen,
+    setIsConfigModalOpen,
 }: UseKeyboardShortcutsProps) {
     useHotkeys('alt+s', () => setSidebarOpen(prev => !prev), []);
     useHotkeys('alt+f', () => {
@@ -27,5 +27,5 @@ export function useKeyboardShortcuts({
         e.preventDefault();
         focusChatTextArea();
     }, { preventDefault: true });
-    useHotkeys('alt+e', () => setIsSettingsModalOpen(prev => !prev), []);
+    useHotkeys('alt+e', () => setIsConfigModalOpen(prev => !prev), []);
 }

@@ -8,7 +8,7 @@ import {
 } from '@xyflow/react';
 import { SpaceProps } from '../types/types';
 import { ArrowLeft, ArrowRight, Maximize2, Minimize2, Menu, SettingsIcon } from 'lucide-react';
-import { SettingsModal } from './SettingsModal';
+import { ConfigModal } from './ConfigModal';
 import ChatInterface from "./ChatInterface";
 import Sidebar from "./Sidebar";
 import '@xyflow/react/dist/style.css';
@@ -44,7 +44,7 @@ export default function Space({ responses,
     const reactFlowInstance = useReactFlow();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [resizeTrigger, setResizeTrigger] = useState<ResizeTrigger>(ResizeTrigger.NONE);
-    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
     const {
         nodes,
@@ -130,7 +130,7 @@ export default function Space({ responses,
         setIsFullScreen,
         handleNewConversation,
         focusChatTextArea,
-        setIsSettingsModalOpen,
+        setIsConfigModalOpen,
     });
 
     const {
@@ -171,13 +171,13 @@ export default function Space({ responses,
                 setIsFullScreen={setIsFullScreen}
                 focusChatTextArea={focusChatTextArea}
                 selectedResponseId={selectedResponseId}
-                setIsSettingsModalOpen={setIsSettingsModalOpen}
+                setIsConfigModalOpen={setIsConfigModalOpen}
             />
             {isSidebarOpen && (
                 <div className="absolute top-4 right-4">
                     <SettingsIcon
                         className="cursor-pointer hover:opacity-70 text-gray-900 dark:text-gray-100"
-                        onClick={() => setIsSettingsModalOpen(true)}
+                        onClick={() => setIsConfigModalOpen(true)}
                         size={20}
                     />
                 </div>
@@ -215,27 +215,27 @@ export default function Space({ responses,
                         />
                     )}
 
-                    {isSettingsModalOpen && (
+                    {isConfigModalOpen && (
                         <div
                             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
                             onClick={(e) => {
                                 if (e.target === e.currentTarget) {
-                                    setIsSettingsModalOpen(false);
+                                    setIsConfigModalOpen(false);
                                 }
                             }}
                         >
                             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg max-w-lg w-full relative">
                                 <button
-                                    onClick={() => setIsSettingsModalOpen(false)}
+                                    onClick={() => setIsConfigModalOpen(false)}
                                     className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                 >
                                     ✕
                                 </button>
-                                <SettingsModal
+                                <ConfigModal
                                     settings={settings}
                                     updateProvider={updateProvider}
                                     saveSettings={saveSettings}
-                                    onClose={() => setIsSettingsModalOpen(false)}
+                                    onClose={() => setIsConfigModalOpen(false)}
                                 />
                             </div>
                         </div>
@@ -264,6 +264,7 @@ export default function Space({ responses,
                         error={error}
                         chatTextareaRef={chatTextareaRef}
                         onEditMessage={onEditMessage}
+                        setIsConfigModalOpen={setIsConfigModalOpen}
                     />
                     <div className="absolute top-4 left-4">
                         {isFullScreen === 'none' ? (
@@ -292,7 +293,7 @@ export default function Space({ responses,
                     />
                     <SettingsIcon
                         className="cursor-pointer hover:opacity-70 text-gray-900 dark:text-gray-100"
-                        onClick={() => setIsSettingsModalOpen(true)}
+                        onClick={() => setIsConfigModalOpen(true)}
                         size={20}
                     />
                 </div>
