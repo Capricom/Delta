@@ -131,7 +131,6 @@ export default function Sidebar({
                                         size={16}
                                         className="hover:text-gray-900 dark:hover:text-gray-200 cursor-pointer"
                                         onClick={(e) => {
-                                            e.stopPropagation();
                                             handleNewConversation();
                                         }}
                                     />

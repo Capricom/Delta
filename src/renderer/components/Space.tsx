@@ -133,6 +133,9 @@ export default function Space({ responses,
                 focusChatTextArea();
             }
         }, 0);
+        setTimeout(() => {
+            reactFlowInstance.fitView({ padding: 0.25, duration: 400 });
+        }, 200);
     }, [isFullScreen, setIsFullScreen, focusChatTextArea]);
 
     useKeyboardShortcuts({
