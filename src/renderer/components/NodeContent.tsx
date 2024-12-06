@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, FileText, FileCode, Copy, Trash2, Check, X } from 'lucide-react';
 import ExpandableContent from './ExpandableContent';
 import { Response } from '../types/types';
-import { useState } from "react";
 import { formatDateTime } from '../services/datetime';
 
 const providerColors: { [key: string]: string } = {

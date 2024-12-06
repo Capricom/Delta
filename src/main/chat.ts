@@ -1,12 +1,11 @@
 import { ollama } from "ollama-ai-provider";
-import { streamText } from "ai";
+import { streamText , Message } from "ai";
 import { ipcMain } from "electron";
 import { ulid } from "ulid";
 import { insert } from "./db";
 import { DbInsertData, EmbeddingData } from "src/renderer/types/types";
 import { getEmbeddingProvider, getProvider, getProviderName } from "./models";
 import { storeAttachment, StoredAttachment } from "./storage";
-import { Message } from "ai";
 
 export function setupChatHandler() {
     ipcMain.on(

@@ -304,8 +304,8 @@ export function deleteConversation(conversationId: string): void {
 
 export async function findSimilarResponses(
     query: string,
-    limit: number = 10,
-    offset: number = 0,
+    limit = 10,
+    offset = 0,
     searchType: "vector" | "text" | "combined" = "combined",
 ): Promise<SimilarResponse[]> {
     let vectorResults: SimilarResponse[] = [];

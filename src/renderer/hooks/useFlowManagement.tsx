@@ -1,9 +1,8 @@
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Node, Edge, useReactFlow } from '@xyflow/react';
 import { Response, ExpandedState } from '../types/types';
 import { FLOW_CONFIG, useSpaceLayout } from './useSpaceLayout';
 import NodeContent from '../components/NodeContent';
-import React from 'react';
 import { ResizeTrigger } from '../components/Space';
 
 export function useFlowManagement({

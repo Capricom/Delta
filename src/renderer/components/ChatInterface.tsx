@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect, Key } from 'react';
 import { Copy, Download, Variable, RotateCw, SquarePen, Check, X, Settings } from 'lucide-react';
 import MarkdownWithSyntax from './MarkdownWithSyntax';
-import { useState, useRef, useEffect, Key } from 'react';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
 import { Message } from 'ai';

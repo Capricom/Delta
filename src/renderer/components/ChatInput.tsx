@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { CircleArrowUp, X } from 'lucide-react';
-import { useState, useCallback } from 'react';
 
 interface ChatInputProps {
     input: string;

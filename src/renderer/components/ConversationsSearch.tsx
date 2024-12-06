@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SimilarResponse } from "../types/types"
-import { useState } from "react";
 
 export function ConversationsSearch({ onSearchResults, onClearSearch, onResultSelect }: {
     onSearchResults: (results: SimilarResponse[]) => void;

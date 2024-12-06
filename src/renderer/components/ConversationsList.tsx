@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Conversation, SimilarResponse } from "../types/types"
 import { Trash2, Check, X, Bot, User, MessageSquare } from 'lucide-react';
 import { ConversationsSearch } from "./ConversationsSearch";

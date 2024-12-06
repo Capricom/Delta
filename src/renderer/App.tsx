@@ -1,10 +1,8 @@
-import { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { Conversation, Response } from "./types/types";
+import { Conversation, Response , Settings } from "./types/types";
 import "@xyflow/react/dist/style.css";
 import Space from "./components/Space";
-import React from "react";
-import { Settings } from "./types/types";
 
 
 const useConversations = () => {
