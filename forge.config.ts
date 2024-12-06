@@ -15,6 +15,7 @@ const config: ForgeConfig = {
       unpack: "*.{node,dylib}",
       unpackDir: "{better-sqlite3,sqlite-vec*,sqlite-vec-darwin-arm64}",
     },
+    icon: path.join(__dirname, "assets", "icon"),
   },
   rebuildConfig: {
     onlyModules: ["better-sqlite3", "sqlite-vec", "sqlite-vec-darwin-arm64"],
