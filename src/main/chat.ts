@@ -173,7 +173,7 @@ async function handleStreamComplete({
         conversation_id: conversationId,
         parent_id: parentId,
         duration_ms: 0,
-        datetime_utc: new Date().toUTCString().replace(" GMT", ""),
+        datetime_utc: new Date().toISOString(),
         temperature,
         top_p: topP,
     };
