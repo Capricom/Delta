@@ -5,6 +5,8 @@ import { FLOW_CONFIG, useSpaceLayout } from './useSpaceLayout';
 import NodeContent from '../components/NodeContent';
 import { ResizeTrigger } from '../components/Space';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export function useFlowManagement({
     responses,
     expandedNodes,
@@ -106,27 +108,26 @@ export function useFlowManagement({
             }
         });
 
-        const result = await layout.getLayoutedElements(newNodes, newEdges);
+        const result = layout.getLayoutedElements(newNodes, newEdges);
+        console.log('Layout result:', result);
         if (result) {
             const { nodes: layoutedNodes, edges: layoutedEdges } = result;
-            setNodes(layoutedNodes);
-            setEdges(layoutedEdges);
+            reactFlowInstance.setNodes(layoutedNodes);
+            reactFlowInstance.setEdges(layoutedEdges);
+
+            await delay(200);
 
             if (selectedResponseId) {
                 const selectedNode = layoutedNodes.find(node => node.id === selectedResponseId);
                 if (selectedNode) {
-                    setTimeout(() => {
-                        reactFlowInstance.setCenter(
-                            selectedNode.position.x + FLOW_CONFIG.nodeWidth / 2,
-                            selectedNode.position.y + FLOW_CONFIG.nodeHeight / 2,
-                            { zoom: 0.85, duration: 400 }
-                        );
-                    }, 150);
+                    reactFlowInstance.setCenter(
+                        selectedNode.position.x + FLOW_CONFIG.nodeWidth / 2,
+                        selectedNode.position.y + FLOW_CONFIG.nodeHeight / 2,
+                        { zoom: 0.85, duration: 400 }
+                    );
                 }
             } else if (resizeTrigger === ResizeTrigger.CONVERSATION_SWITCH) {
-                setTimeout(() => {
-                    reactFlowInstance.fitView({ padding: 0.25, duration: 400 });
-                }, 150);
+                reactFlowInstance.fitView({ padding: 0.25, duration: 400 });
             }
         }
 

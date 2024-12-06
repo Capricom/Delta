@@ -1,6 +1,6 @@
 import { Edge, Node, Position } from "@xyflow/react";
 import dagre from "dagre";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 
 export const FLOW_CONFIG = {
     nodeWidth: 550,
@@ -17,24 +17,12 @@ interface LayoutResult {
 }
 
 export function useSpaceLayout() {
-    const layoutInProgress = useRef<boolean>(false);
-    const layoutQueue = useRef<
-        { nodes: Node[]; edges: Edge[]; direction: string } | null
-    >(null);
-
     const getLayoutedElements = useCallback(
-        async (
+        (
             nodes: Node[],
             edges: Edge[],
             direction = "TB",
-        ): Promise<LayoutResult | null> => {
-            if (layoutInProgress.current) {
-                layoutQueue.current = { nodes, edges, direction };
-                return null;
-            }
-
-            layoutInProgress.current = true;
-
+        ): LayoutResult => {
             const dagreGraph = new dagre.graphlib.Graph();
             dagreGraph.setDefaultEdgeLabel(() => ({}));
 
@@ -61,52 +49,38 @@ export function useSpaceLayout() {
                 dagreGraph.setEdge(edge.source, edge.target);
             });
 
-            return new Promise<LayoutResult>((resolve) => {
-                setTimeout(() => {
-                    dagre.layout(dagreGraph);
+            dagre.layout(dagreGraph);
 
-                    const result = {
-                        nodes: nodes.map((node) => {
-                            const nodeWithPosition = dagreGraph.node(node.id);
-                            return {
-                                ...node,
-                                targetPosition: isHorizontal
-                                    ? Position.Left
-                                    : Position.Top,
-                                sourcePosition: isHorizontal
-                                    ? Position.Right
-                                    : Position.Bottom,
-                                position: {
-                                    x: nodeWithPosition.x -
-                                        FLOW_CONFIG.nodeWidth / 2,
-                                    y: nodeWithPosition.y -
-                                        FLOW_CONFIG.nodeHeight / 2,
-                                },
-                            };
-                        }),
-                        edges: edges.map((edge) => ({
-                            ...edge,
-                            type: "smoothstep",
-                            animated: true,
-                            style: {
-                                stroke: "#555",
-                                strokeWidth: 2,
-                                curvature: FLOW_CONFIG.edgeCurvature,
-                            },
-                        })),
+            return {
+                nodes: nodes.map((node) => {
+                    const nodeWithPosition = dagreGraph.node(node.id);
+                    return {
+                        ...node,
+                        targetPosition: isHorizontal
+                            ? Position.Left
+                            : Position.Top,
+                        sourcePosition: isHorizontal
+                            ? Position.Right
+                            : Position.Bottom,
+                        position: {
+                            x: nodeWithPosition.x -
+                                FLOW_CONFIG.nodeWidth / 2,
+                            y: nodeWithPosition.y -
+                                FLOW_CONFIG.nodeHeight / 2,
+                        },
                     };
-
-                    layoutInProgress.current = false;
-
-                    if (layoutQueue.current) {
-                        const { nodes, edges, direction } = layoutQueue.current;
-                        layoutQueue.current = null;
-                        getLayoutedElements(nodes, edges, direction);
-                    }
-
-                    resolve(result);
-                }, 0);
-            });
+                }),
+                edges: edges.map((edge) => ({
+                    ...edge,
+                    type: "smoothstep",
+                    animated: true,
+                    style: {
+                        stroke: "#555",
+                        strokeWidth: 2,
+                        curvature: FLOW_CONFIG.edgeCurvature,
+                    },
+                })),
+            };
         },
         [],
     );
