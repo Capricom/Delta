@@ -1,9 +1,13 @@
 import { Message } from "ai";
-import { Conversation, Response, SimilarResponse, Settings, AdminFunctions } from "./types";
+import {
+    AdminFunctions,
+    Conversation,
+    Response,
+    Settings,
+    SimilarResponse,
+} from "./types";
 
 interface IElectronAPI {
-    test: (data: string) => Promise<void>;
-    testSend: (data: string) => void;
     startStream: (
         options: {
             messages: Message[];
@@ -28,7 +32,15 @@ interface IElectronAPI {
         responseId: string,
     ) => Promise<{ success: boolean }>;
     getModels: () => Promise<{ modelsByProvider: Record<string, string[]> }>;
-    findSimilarResponses: (options: { query: string, searchType?: "vector" | "text" | "combined", limit?: number, offset?: number }) => Promise<SimilarResponse[]>;
+    checkOllamaStatus: (url: string) => Promise<boolean>;
+    findSimilarResponses: (
+        options: {
+            query: string;
+            searchType?: "vector" | "text" | "combined";
+            limit?: number;
+            offset?: number;
+        },
+    ) => Promise<SimilarResponse[]>;
     getSettings: () => Promise<Settings>;
     saveSettings: (
         settings: { providers: { name: string; apiKey: string }[] },

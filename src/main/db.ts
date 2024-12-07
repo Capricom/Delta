@@ -312,9 +312,10 @@ export async function findSimilarResponses(
     let ftsResults: SimilarResponse[] = [];
 
     if (searchType === "vector" || searchType === "combined") {
+        const sanitizedQuery = query.replace(/[^\w\s]/g, "").trim();
         const embeddingProvider = getEmbeddingProvider("nomic-embed-text");
         const embeddingsRes = await embeddingProvider.doEmbed({
-            values: [query],
+            values: [sanitizedQuery],
         });
         const queryEmbedding = Buffer.from(
             new Float32Array(embeddingsRes.embeddings[0]).buffer,
@@ -337,6 +338,7 @@ export async function findSimilarResponses(
     }
 
     if (searchType === "text" || searchType === "combined") {
+        const sanitizedQuery = query.replace(/[^\w\s]/g, "").trim();
         ftsResults = db.prepare(`
             WITH fts_matches AS (
                 SELECT
@@ -358,7 +360,12 @@ export async function findSimilarResponses(
                 LIMIT ?
             )
             SELECT * FROM fts_matches
-        `).all(query, query, query, limit * 2) as SimilarResponse[];
+        `).all(
+            sanitizedQuery,
+            sanitizedQuery,
+            sanitizedQuery,
+            limit * 2,
+        ) as SimilarResponse[];
     }
 
     if (searchType === "combined") {

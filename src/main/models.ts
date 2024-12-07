@@ -3,7 +3,7 @@ import { ollama } from "ollama-ai-provider";
 import { createGoogleGenerativeAI, google } from "@ai-sdk/google";
 import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI, openai } from "@ai-sdk/openai";
-import { apiKeys } from "./settings";
+import { apiKeys, DEFAULT_OLLAMA_URL } from "./settings";
 
 const getAnthropicProvider = () =>
     apiKeys.get("anthropic")
@@ -20,13 +20,42 @@ const getOpenAIProvider = () =>
         ? createOpenAI({ apiKey: apiKeys.get("openai") })
         : openai;
 
-export const modelProviders = {
-    "llama3.2": { provider: ollama, providerName: "ollama" },
-    "hermes3": { provider: ollama, providerName: "ollama" },
-    "qwen2.5": { provider: ollama, providerName: "ollama" },
-    "gemma2": { provider: ollama, providerName: "ollama" },
-    "mistral": { provider: ollama, providerName: "ollama" },
+const getOllamaModels = async () => {
+    try {
+        const ollamaUrl = apiKeys.get("ollamaUrl") || DEFAULT_OLLAMA_URL;
+        const response = await fetch(`${ollamaUrl}/api/tags`);
+        if (!response.ok) {
+            return {};
+        }
+        const data = await response.json();
+        return data.models.reduce(
+            (
+                acc: Record<
+                    string,
+                    { provider: typeof ollama; providerName: string }
+                >,
+                model: { name: string },
+            ) => {
+                acc[model.name] = { provider: ollama, providerName: "ollama" };
+                return acc;
+            },
+            {},
+        );
+    } catch {
+        return {};
+    }
+};
 
+export async function checkOllamaStatus(url: string = DEFAULT_OLLAMA_URL) {
+    try {
+        const response = await fetch(`${url}/api/tags`);
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+
+const baseModelProviders = {
     "gemini-1.5-flash-latest": {
         get provider() {
             return getGoogleProvider();
@@ -85,7 +114,17 @@ export const modelProviders = {
     },
 } as const;
 
-export type SupportedModel = keyof typeof modelProviders;
+let modelProviders = baseModelProviders;
+
+const refreshModelProviders = async () => {
+    const ollamaModels = await getOllamaModels();
+    modelProviders = {
+        ...baseModelProviders,
+        ...ollamaModels,
+    };
+};
+
+export type SupportedModel = keyof typeof baseModelProviders;
 
 export function getProvider(model: string) {
     if (model in modelProviders) {
@@ -107,6 +146,7 @@ export function getEmbeddingProvider(_model: string) {
 
 const getModelsHandler = async () => {
     try {
+        await refreshModelProviders();
         const modelsByProvider: Record<string, string[]> = {};
 
         Object.entries(modelProviders).forEach(([model, { providerName }]) => {
@@ -128,4 +168,8 @@ const getModelsHandler = async () => {
 
 export function setupModelsHandlers() {
     ipcMain.handle("models:get", getModelsHandler);
+    ipcMain.handle(
+        "models:checkOllama",
+        async (_event, url) => checkOllamaStatus(url),
+    );
 }

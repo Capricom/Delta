@@ -54,6 +54,11 @@ export function useChat({ body, onFinish }: UseChatOptions) {
                 return [...prevMessages, message];
             });
         });
+
+        window.api.onStreamError((err: Error) => {
+            setError(err);
+            setIsLoading(false);
+        });
     }, []);
 
     const handleInputChange = (
@@ -68,6 +73,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
             chatRequestOptions?: ChatRequestOptions,
         ) => {
             try {
+                setError(undefined);
                 setIsLoading(true);
                 const messageWithAnnotations = {
                     ...message,
@@ -103,7 +109,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
                 if (!lastMessage || lastMessage.role === "assistant") {
                     return null;
                 }
-
+                setError(undefined);
                 setIsLoading(true);
 
                 window.api.startStream({

@@ -24,14 +24,6 @@ const onMessage = (msg: any, cb: (arg0: any) => any) =>
     onMessageHandler(msg, (evt: any, data: any) => cb(data));
 
 contextBridge.exposeInMainWorld("api", {
-    test: async (data: string) => {
-        console.log("testing");
-        await invokeMessage("test", data);
-    },
-    testSend: (data: string) => {
-        console.log("testing");
-        sendMessage("test", data);
-    },
     startStream: (options: {
         messages: Message[];
         model: string;
@@ -49,11 +41,10 @@ contextBridge.exposeInMainWorld("api", {
             "chat:stream-complete",
             (_event, message: Message) => callback(message),
         ),
-    onStreamError: (callback) =>
-        ipcRenderer.on(
-            "chat:stream-error",
-            (_event, error: Error) => callback(error),
-        ),
+    onStreamError: (callback: (error: Error) => void) =>
+        ipcRenderer.on("chat:stream-error", (_event, error: Error) => {
+            callback(new Error(error.message));
+        }),
     getConversations: () => ipcRenderer.invoke("conversations:get"),
     getResponses: (conversationId: string) =>
         ipcRenderer.invoke("conversations:getResponses", conversationId),
@@ -65,15 +56,23 @@ contextBridge.exposeInMainWorld("api", {
             responseId,
         }),
     getModels: () => ipcRenderer.invoke("models:get"),
-    findSimilarResponses: (options: { query: string, searchType?: "vector" | "text" | "combined", limit?: number, offset?: number }) =>
-        invokeMessage("search:find", options),
+    checkOllamaStatus: (url: string) =>
+        ipcRenderer.invoke("models:checkOllama", url),
+    findSimilarResponses: (
+        options: {
+            query: string;
+            searchType?: "vector" | "text" | "combined";
+            limit?: number;
+            offset?: number;
+        },
+    ) => invokeMessage("search:find", options),
     getSettings: () => {
-        return invokeMessage("settings:get", {})
+        return invokeMessage("settings:get", {});
     },
     saveSettings: (
         settings: { providers: { name: string; apiKey: string }[] },
     ) => {
-        return invokeMessage("settings:save", settings)
+        return invokeMessage("settings:save", settings);
     },
     admin: {
         backfillFTSData: async () => {
@@ -81,7 +80,6 @@ contextBridge.exposeInMainWorld("api", {
         },
         backfillEmbeddings: async () => {
             return invokeMessage("admin:backfillEmbeddings", {});
-        }
-    }
+        },
+    },
 });
-

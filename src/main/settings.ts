@@ -2,16 +2,23 @@ import path from "path";
 import fs from "fs";
 import { app, ipcMain } from "electron";
 
-type Provider = "openai" | "anthropic" | "google";
+type Provider = "openai" | "anthropic" | "google" | "ollama";
 
 interface ApiKeys {
     openAI?: string;
     anthropic?: string;
     google?: string;
+    ollamaUrl?: string;
     [key: string]: string | undefined;
 }
 
-export const PROVIDERS: Provider[] = ["openai", "anthropic", "google"];
+export const PROVIDERS: Provider[] = [
+    "openai",
+    "anthropic",
+    "google",
+    "ollama",
+];
+export const DEFAULT_OLLAMA_URL = "http://localhost:11434";
 
 const KEYS_FILE = path.join(
     app.getPath("userData"),

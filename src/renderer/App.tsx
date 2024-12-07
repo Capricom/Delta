@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { Conversation, Response , Settings } from "./types/types";
+import { Conversation, Response, Settings } from "./types/types";
 import "@xyflow/react/dist/style.css";
 import Space from "./components/Space";
 
@@ -72,7 +72,6 @@ export const App: FC = () => {
     useEffect(() => {
         fetchConversations();
     }, []);
-
     useEffect(() => {
         const fetchAndFilterModels = async () => {
             const data = await window.api.getModels();
@@ -82,12 +81,11 @@ export const App: FC = () => {
                 .sort();
             const filteredModels = Object.fromEntries(
                 Object.entries(data.modelsByProvider)
-                    .filter(([provider]) => availableProviders.includes(provider))
+                    .filter(([provider]) => availableProviders.includes(provider) || provider === 'ollama')
                     .sort(([a], [b]) => a.localeCompare(b))
             );
             setModelsByProvider(filteredModels);
 
-            // Set the first available model as the selected model
             const firstProvider = Object.keys(filteredModels)[0];
             if (firstProvider && filteredModels[firstProvider]?.length > 0) {
                 setSelectedModel(filteredModels[firstProvider][0]);

@@ -109,7 +109,6 @@ export function useFlowManagement({
         });
 
         const result = layout.getLayoutedElements(newNodes, newEdges);
-        console.log('Layout result:', result);
         if (result) {
             const { nodes: layoutedNodes, edges: layoutedEdges } = result;
             reactFlowInstance.setNodes(layoutedNodes);
