@@ -2,7 +2,7 @@ import { app, BrowserWindow, Menu } from "electron";
 import path from "path";
 import { log } from "./renderer/services/logging";
 import { setupChatHandler } from "./main/chat";
-import db, { ensureTable } from "./main/db";
+import db, { ensureTables } from "./main/db";
 import { initAttachmentStorage } from "./main/storage";
 import { setupConversationsHandlers } from "./main/conversations";
 import { setupSearchHandlers } from "./main/search";
@@ -13,7 +13,7 @@ import { setupAdminHandlers } from "./main/admin";
 app.name = "Delta";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (process.platform === 'win32') {
+if (process.platform === "win32") {
   try {
     if (require("electron-squirrel-startup")) {
       app.quit();
@@ -34,7 +34,7 @@ const registerIpcHandlers = () => {
 
 const initLocalStorage = async () => {
   await initAttachmentStorage();
-  ensureTable();
+  await ensureTables();
 };
 
 registerIpcHandlers();

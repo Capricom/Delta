@@ -94,3 +94,9 @@ dist/
 
 # Python
 .venv
+
+# direnv
+.direnv
+
+# local test dbs
+*.db

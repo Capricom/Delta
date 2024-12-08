@@ -1,10 +1,10 @@
+import knex from "knex";
 import { getEmbeddingProvider } from "./models";
-import Database from "better-sqlite3";
-import * as sqliteVec from "sqlite-vec";
 import { deleteAttachment, getAttachment } from "./storage";
 import { app } from "electron";
 import { join } from "path";
-import { mkdir } from "fs/promises";
+import { getConfig } from "../../knexfile";
+
 import {
     Attachment,
     Conversation,
@@ -15,209 +15,100 @@ import {
     SimilarResponse,
 } from "src/renderer/types/types";
 
-const DELTA_DATA_DIR = join(app.getPath("userData"), "delta_data");
-try {
-    mkdir(DELTA_DATA_DIR, { recursive: true });
-} catch (error) {
-    console.error("Failed to create delta_data directory:", error);
+const filename = join(app.getPath("userData"), "delta_data", "delta.db");
+console.log(`Using database at ${filename}`);
+
+const config = getConfig(filename);
+
+export const db = knex(config);
+db.raw("PRAGMA journal_mode = WAL");
+
+export async function ensureTables(): Promise<void> {
+    try {
+        await db.migrate.latest(config.migrations);
+    } catch (error) {
+        console.error("Migration failed:", error);
+        throw error;
+    }
 }
 
-const DATABASE_PATH = join(DELTA_DATA_DIR, "delta.db");
-const db = new Database(DATABASE_PATH);
-
-// Get the base path without extension
-let sqliteVecPath = sqliteVec.getLoadablePath().replace(/\.[^.]+$/, "");
-
-// If we're in a packaged app (asar), adjust the path
-if (sqliteVecPath.includes("app.asar")) {
-    sqliteVecPath = sqliteVecPath.replace("app.asar", "app.asar.unpacked");
-}
-
-console.log("Loading SQLite vector extension from:", sqliteVecPath);
-db.loadExtension(sqliteVecPath);
-
-export function ensureTable(): void {
-    const attachmentsTableSchema = `
-        id TEXT PRIMARY KEY,
-        response_id TEXT,
-        file_path TEXT,
-        type TEXT,
-        created_at TEXT,
-        FOREIGN KEY(response_id) REFERENCES responses(id)
-    `;
-
-    const conversationsTableSchema = `
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        created_at TEXT
-    `;
-
-    const embeddingsTableSchema = `
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        response_id TEXT,
-        embedding BLOB,
-        embedding_model TEXT,
-        type TEXT
-    `;
-
-    const responsesTableSchema = `
-        id TEXT PRIMARY KEY,
-        model TEXT,
-        provider TEXT,
-        prompt TEXT,
-        system TEXT,
-        response TEXT,
-        conversation_id TEXT,
-        parent_id TEXT,
-        duration_ms INTEGER,
-        datetime_utc TEXT,
-        temperature REAL,
-        top_p REAL,
-        FOREIGN KEY(conversation_id) REFERENCES conversations(id)
-    `;
-
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS conversations (${conversationsTableSchema});
-        CREATE TABLE IF NOT EXISTS responses (${responsesTableSchema});
-        CREATE TABLE IF NOT EXISTS attachments (${attachmentsTableSchema});
-        CREATE TABLE IF NOT EXISTS embeddings (${embeddingsTableSchema});
-
-        CREATE VIRTUAL TABLE IF NOT EXISTS responses_fts USING fts5(
-            id UNINDEXED,
-            conversation_id UNINDEXED,
-            prompt,
-            response,
-            content='responses',
-            content_rowid='rowid'
-        );
-
-        CREATE TRIGGER IF NOT EXISTS responses_ai AFTER INSERT ON responses BEGIN
-            INSERT INTO responses_fts(rowid, id, conversation_id, prompt, response)
-            VALUES (new.rowid, new.id, new.conversation_id, new.prompt, new.response);
-        END;
-
-        CREATE TRIGGER IF NOT EXISTS responses_ad AFTER DELETE ON responses BEGIN
-            INSERT INTO responses_fts(responses_fts, rowid, id, conversation_id, prompt, response)
-            VALUES('delete', old.rowid, old.id, old.conversation_id, old.prompt, old.response);
-        END;
-
-        CREATE TRIGGER IF NOT EXISTS responses_au AFTER UPDATE ON responses BEGIN
-            INSERT INTO responses_fts(responses_fts, rowid, id, conversation_id, prompt, response)
-            VALUES('delete', old.rowid, old.id, old.conversation_id, old.prompt, old.response);
-            INSERT INTO responses_fts(rowid, id, conversation_id, prompt, response)
-            VALUES (new.rowid, new.id, new.conversation_id, new.prompt, new.response);
-        END;
-    `);
-}
-
-export function insert(
+export async function insert(
     response: DbInsertData,
     embeddings?: EmbeddingData,
     conversation?: DbInsertData,
     attachments?: { id: string; file_path: string; type: string }[],
-): void {
-    db.transaction(() => {
-        if (conversation) {
-            const columns = Object.keys(conversation).join(", ");
-            const placeholders = Object.keys(conversation).map(() => "?").join(
-                ", ",
-            );
-            const values = Object.values(conversation);
-
-            const stmt = db.prepare(
-                `INSERT INTO conversations (${columns}) VALUES (${placeholders})`,
-            );
-            stmt.run(...values);
+): Promise<void> {
+    await db.transaction(async (trx) => {
+        if (conversation && Object.keys(conversation).length > 0) {
+            await trx("conversations").insert(conversation);
         }
 
-        const responseColumns = Object.keys(response).join(", ");
-        const responsePlaceholders = Object.keys(response).map(() => "?").join(
-            ", ",
-        );
-
-        const responseStmt = db.prepare(
-            `INSERT INTO responses (${responseColumns}) VALUES (${responsePlaceholders})`,
-        );
-        responseStmt.run(...Object.values(response));
+        if (Object.keys(response).length > 0) {
+            await trx("responses").insert(response);
+        }
 
         if (embeddings) {
-            const embeddingStmt = db.prepare(`
-                INSERT INTO embeddings (
-                    response_id,
-                    embedding,
-                    embedding_model,
-                    type
-                ) VALUES (?, ?, ?, ?)
-            `);
-
-            embeddingStmt.run(
-                response.id,
-                Buffer.from(
-                    new Float32Array(embeddings.prompt_embedding).buffer,
-                ),
-                embeddings.model,
-                "prompt",
-            );
-            embeddingStmt.run(
-                response.id,
-                Buffer.from(
-                    new Float32Array(embeddings.response_embedding).buffer,
-                ),
-                embeddings.model,
-                "response",
-            );
+            await trx("embeddings").insert([
+                {
+                    response_id: response.id,
+                    embedding: Buffer.from(
+                        new Float32Array(embeddings.prompt_embedding).buffer,
+                    ),
+                    embedding_model: embeddings.model,
+                    type: "prompt",
+                },
+                {
+                    response_id: response.id,
+                    embedding: Buffer.from(
+                        new Float32Array(embeddings.response_embedding).buffer,
+                    ),
+                    embedding_model: embeddings.model,
+                    type: "response",
+                },
+            ]);
         }
 
-        if (attachments) {
-            const attachmentStmt = db.prepare(`
-                INSERT INTO attachments (id, response_id, file_path, type, created_at)
-                VALUES (?, ?, ?, ?, ?)
-            `);
-
-            for (const attachment of attachments) {
-                attachmentStmt.run(
-                    attachment.id,
-                    response.id,
-                    attachment.file_path,
-                    attachment.type,
-                    new Date().toISOString(),
-                );
-            }
+        if (attachments && attachments.length > 0) {
+            await trx("attachments").insert(
+                attachments.map((attachment) => ({
+                    id: attachment.id,
+                    response_id: response.id,
+                    file_path: attachment.file_path,
+                    type: attachment.type,
+                    created_at: new Date().toISOString(),
+                })),
+            );
         }
-    })();
+    });
 }
 
-export function getAllConversations(): Conversation[] {
-    const stmt = db.prepare(
-        `SELECT * FROM conversations ORDER BY created_at DESC`,
-    );
-    return stmt.all() as Conversation[];
+export async function getAllConversations(): Promise<Conversation[]> {
+    return await db("conversations")
+        .orderBy("created_at", "desc");
 }
 
 export async function getResponsesForConversation(
     conversationId: string,
 ): Promise<Response[]> {
-    const stmt = db.prepare(`
-        SELECT
-            r.*,
-            json_group_array(
+    const responses = await db("responses")
+        .select(
+            "responses.*",
+            db.raw(`json_group_array(
                 json_object(
-                    'id', a.id,
-                    'response_id', a.response_id,
-                    'file_path', a.file_path,
-                    'type', a.type,
-                    'created_at', a.created_at
+                    'id', attachments.id,
+                    'response_id', attachments.response_id,
+                    'file_path', attachments.file_path,
+                    'type', attachments.type,
+                    'created_at', attachments.created_at
                 )
-            ) FILTER (WHERE a.id IS NOT NULL) as attachments
-        FROM responses r
-        LEFT JOIN attachments a ON r.id = a.response_id
-        WHERE r.conversation_id = ?
-        GROUP BY r.id
-        ORDER BY r.datetime_utc ASC
-    `);
+            ) FILTER (WHERE attachments.id IS NOT NULL) as attachments`),
+        )
+        .leftJoin("attachments", "responses.id", "attachments.response_id")
+        .where("responses.conversation_id", conversationId)
+        .groupBy("responses.id")
+        .orderBy("responses.datetime_utc", "asc") as DbResponse[];
 
-    const responses = stmt.all(conversationId) as DbResponse[];
-    const res = await Promise.all(responses.map(async (response) => {
+    return await Promise.all(responses.map(async (response) => {
         const attachments = JSON.parse(
             response.attachments || "[]",
         ) as Attachment[];
@@ -234,72 +125,70 @@ export async function getResponsesForConversation(
             attachments: base64Attachments,
         };
     }));
-    return res;
 }
 
-export function deleteResponse(
+export async function deleteResponse(
     conversationId: string,
     responseId: string,
-): void {
-    const stmt = db.prepare(`
-        DELETE FROM responses
-        WHERE id = ? AND conversation_id = ?
-    `);
-    stmt.run(responseId, conversationId);
+): Promise<void> {
+    await db("responses")
+        .where({
+            id: responseId,
+            conversation_id: conversationId,
+        })
+        .delete();
 }
 
-export function deleteConversation(conversationId: string): void {
-    const getAttachments = db.prepare(`
-        SELECT file_path FROM attachments
-        WHERE response_id IN (
-            SELECT id FROM responses WHERE conversation_id = ?
-        )
-    `);
+export async function deleteConversation(
+    conversationId: string,
+): Promise<void> {
+    await db.transaction(async (trx) => {
+        const attachments = await trx("attachments")
+            .select("file_path")
+            .whereIn(
+                "response_id",
+                trx("responses")
+                    .select("id")
+                    .where("conversation_id", conversationId),
+            );
 
-    const deleteEmbeddings = db.prepare(`
-        DELETE FROM embeddings
-        WHERE response_id IN (
-            SELECT id FROM responses WHERE conversation_id = ?
-        )
-    `);
-
-    const deleteAttachments = db.prepare(`
-        DELETE FROM attachments
-        WHERE response_id IN (
-            SELECT id FROM responses WHERE conversation_id = ?
-        )
-    `);
-
-    const deleteResponses = db.prepare(`
-        DELETE FROM responses
-        WHERE conversation_id = ?
-    `);
-
-    const deleteConversation = db.prepare(`
-        DELETE FROM conversations
-        WHERE id = ?
-    `);
-
-    db.transaction(() => {
-        const attachments = getAttachments.all(conversationId) as {
-            file_path: string;
-        }[];
-        attachments.forEach((attachment) => {
+        for (const attachment of attachments) {
             try {
-                deleteAttachment(attachment.file_path);
+                await deleteAttachment(attachment.file_path);
             } catch (error) {
                 console.error(
                     `Failed to delete attachment ${attachment.file_path}:`,
                     error,
                 );
             }
-        });
+        }
 
-        deleteEmbeddings.run(conversationId);
-        deleteAttachments.run(conversationId);
-        deleteResponses.run(conversationId);
-        deleteConversation.run(conversationId);
-    })();
+        await trx("embeddings")
+            .whereIn(
+                "response_id",
+                trx("responses")
+                    .select("id")
+                    .where("conversation_id", conversationId),
+            )
+            .delete();
+
+        await trx("attachments")
+            .whereIn(
+                "response_id",
+                trx("responses")
+                    .select("id")
+                    .where("conversation_id", conversationId),
+            )
+            .delete();
+
+        await trx("responses")
+            .where("conversation_id", conversationId)
+            .delete();
+
+        await trx("conversations")
+            .where("id", conversationId)
+            .delete();
+    });
 }
 
 export async function findSimilarResponses(
@@ -321,7 +210,8 @@ export async function findSimilarResponses(
             new Float32Array(embeddingsRes.embeddings[0]).buffer,
         );
 
-        vectorResults = db.prepare(`
+        vectorResults = await db.raw(
+            `
             WITH vector_matches AS (
                 SELECT
                     e.id, e.response_id, e.type, r.prompt, r.response, r.conversation_id,
@@ -334,12 +224,15 @@ export async function findSimilarResponses(
                 LIMIT ?
             )
             SELECT * FROM vector_matches
-        `).all(queryEmbedding, limit * 2) as SimilarResponse[];
+        `,
+            [queryEmbedding, limit * 2],
+        );
     }
 
     if (searchType === "text" || searchType === "combined") {
         const sanitizedQuery = query.replace(/[^\w\s]/g, "").trim();
-        ftsResults = db.prepare(`
+        ftsResults = await db.raw(
+            `
             WITH fts_matches AS (
                 SELECT
                     NULL as id, r.id as response_id,
@@ -360,12 +253,9 @@ export async function findSimilarResponses(
                 LIMIT ?
             )
             SELECT * FROM fts_matches
-        `).all(
-            sanitizedQuery,
-            sanitizedQuery,
-            sanitizedQuery,
-            limit * 2,
-        ) as SimilarResponse[];
+        `,
+            [sanitizedQuery, sanitizedQuery, sanitizedQuery, limit * 2],
+        );
     }
 
     if (searchType === "combined") {

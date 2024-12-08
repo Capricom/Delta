@@ -2,8 +2,9 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
     build: {
+        sourcemap: true,
         rollupOptions: {
-            external: ["better-sqlite3", "sqlite-vec"],
+            external: ["knex", "better-sqlite3", "sqlite-vec"],
         },
         lib: {
             entry: "src/main.ts",

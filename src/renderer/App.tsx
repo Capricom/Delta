@@ -36,14 +36,6 @@ export const App: FC = () => {
     const { conversations, fetchConversations } = useConversations();
     const [settings, setSettings] = useState<Settings>({ providers: [] });
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            const settings = await window.api.getSettings();
-            setSettings(settings);
-        };
-        fetchSettings();
-    }, []);
-
     const updateProvider = (name: string, apiKey: string) => {
         const newSettings = {
             ...settings,
@@ -72,6 +64,7 @@ export const App: FC = () => {
     useEffect(() => {
         fetchConversations();
     }, []);
+
     useEffect(() => {
         const fetchAndFilterModels = async () => {
             const data = await window.api.getModels();
@@ -93,6 +86,15 @@ export const App: FC = () => {
         };
         fetchAndFilterModels();
     }, [settings]);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const settings = await window.api.getSettings();
+            console.log("Fetched settings:", settings);
+            setSettings(settings);
+        };
+        fetchSettings();
+    }, []);
 
     return (
         <ReactFlowProvider>
