@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, Key } from 'react';
-import { Copy, Download, Variable, RotateCw, SquarePen, Check, X, Settings } from 'lucide-react';
+import { Copy, Download, Variable, RotateCw, SquarePen, Check, X, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import MarkdownWithSyntax from './MarkdownWithSyntax';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
 import { Message } from 'ai';
+import { Node, Edge } from '@xyflow/react';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -25,7 +26,44 @@ interface ChatInterfaceProps {
   error?: Error;
   chatTextareaRef: React.RefObject<HTMLTextAreaElement>;
   setIsConfigModalOpen: (open: boolean) => void;
+  nodes: Node[];
+  edges: Edge[];
 }
+
+const DownloadMenu = ({
+  isOpen,
+  setIsOpen,
+  onDownloadChat,
+  onDownloadCanvas,
+  messages
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  onDownloadChat: () => void;
+  onDownloadCanvas: () => void;
+  messages: Message[];
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="flex flex-col gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+      {messages.length > 0 && (
+        <button
+          onClick={onDownloadChat}
+          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+        >
+          Download Chat JSON
+        </button>
+      )}
+      <button
+        onClick={onDownloadCanvas}
+        className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+      >
+        Download Canvas JSON
+      </button>
+    </div>
+  );
+};
 
 export default function ChatInterface({
   messages,
@@ -47,14 +85,17 @@ export default function ChatInterface({
   error,
   chatTextareaRef,
   setIsConfigModalOpen,
+  nodes,
+  edges,
 }: ChatInterfaceProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,23 +115,16 @@ export default function ChatInterface({
     }
   }, [editingMessageId, editContent]);
 
-  const handleDownload = () => {
+  const handleDownloadChat = () => {
     if (messages.length === 0) return;
 
     const conversationId = messages[0]?.annotations?.find((a: any) => a.field === "conversationId")?.id;
-
     const formattedMessages = messages.map(message => ({
       role: message.role,
-      content: [
-        {
-          type: "text",
-          text: message.content
-        }
-      ]
+      content: [{ type: "text", text: message.content }]
     }));
 
-    const jsonContent = JSON.stringify(formattedMessages, null, 2);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(formattedMessages, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -99,6 +133,65 @@ export default function ChatInterface({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    setIsDownloadMenuOpen(false);
+  };
+
+  const handleDownloadCanvas = () => {
+    if (nodes.length === 0) return;
+    console.log("Messages:", messages);
+    console.log("Nodes:", nodes);
+
+
+    const conversationId = messages[0]?.annotations?.find((a: any) => a.field === "conversationId")?.id;
+
+    const canvasNodes = nodes.map(node => {
+      if (node.id === 'system-prompt') {
+        return {
+          id: node.id,
+          type: 'text',
+          x: node.position.x,
+          y: node.position.y,
+          width: node.style?.width || 550,
+          height: node.style?.height || 150,
+          text: `## System Prompt\n${node.data.text || ''}`
+        };
+      }
+
+      const response = node.data.response as Response;
+      return {
+        id: node.id,
+        type: 'text',
+        x: node.position.x,
+        y: node.position.y,
+        width: node.style?.width || 550,
+        height: node.style?.height || 150,
+        text: `${response?.prompt ? `## User\n${response.prompt}\n\n` : ''}${response?.response ? `## ${response.model}\n${response.response}` : ''}`
+      };
+    });
+
+    const canvasEdges = edges.map(edge => ({
+      id: edge.id,
+      fromNode: edge.source,
+      toNode: edge.target,
+      fromEnd: 'none',
+      toEnd: 'arrow'
+    }));
+
+    const canvasJson = {
+      nodes: canvasNodes,
+      edges: canvasEdges
+    };
+
+    const blob = new Blob([JSON.stringify(canvasJson, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `canvas_${conversationId || 'export'}.canvas`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setIsDownloadMenuOpen(false);
   };
 
   return (
@@ -241,43 +334,57 @@ export default function ChatInterface({
                 Click here to open <Settings className="inline-block align-text-bottom" size={16} /> and add API keys to enable models.
               </div>
             ) : (
-              <select
-                value={selectedModel}
-                onChange={(e) => {
-                  setSelectedModel(e.target.value)
-                }}
-                className="w-full rounded-lg px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {Object.entries(modelsByProvider).map(([provider, models]) => (
-                  <optgroup key={provider} label={provider}>
-                    {models.map((model) => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
+              <div className="flex gap-2 w-full">
+                <div className="flex-1 min-w-0"> {/* Add this wrapper */}
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="w-full rounded-lg px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-ellipsis overflow-hidden whitespace-nowrap"
+                  >
+                    {Object.entries(modelsByProvider).map(([provider, models]) => (
+                      <optgroup key={provider} label={provider}>
+                        {models.map((model) => (
+                          <option key={model} value={model} className="text-ellipsis overflow-hidden">
+                            {model}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
-                  </optgroup>
-                ))}
-              </select>
+                  </select>
+                </div>
+                <div className="flex gap-2 ml-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] w-[40px] transition-all text-gray-700 dark:text-gray-300"
+                    title="Model Settings"
+                  >
+                    <Variable size={20} />
+                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)}
+                      className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] transition-all text-gray-700 dark:text-gray-300"
+                      title="Download Options"
+                    >
+                      <Download size={20} className="mr-1" />
+                      {isDownloadMenuOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
-            <div className="flex gap-2 ml-2">
-              <button
-                type="button"
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] w-[40px] transition-all text-gray-700 dark:text-gray-300"
-                title="Model Settings"
-              >
-                <Variable size={20} />
-              </button>
-              <button
-                type="button"
-                onClick={handleDownload}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center h-[40px] w-[40px] transition-all text-gray-700 dark:text-gray-300"
-                title="Download Conversation"
-              >
-                <Download size={20} />
-              </button>
-            </div>
           </div>
+          {isDownloadMenuOpen && (
+            <DownloadMenu
+              isOpen={isDownloadMenuOpen}
+              setIsOpen={setIsDownloadMenuOpen}
+              onDownloadChat={handleDownloadChat}
+              onDownloadCanvas={handleDownloadCanvas}
+              messages={messages}
+            />
+          )}
           {showSettings && (
             <div className="flex gap-4 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
               <div className="flex flex-col gap-2 flex-1">

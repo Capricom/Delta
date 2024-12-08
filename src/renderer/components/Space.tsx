@@ -283,6 +283,8 @@ export default function Space({ responses,
                         chatTextareaRef={chatTextareaRef}
                         onEditMessage={onEditMessage}
                         setIsConfigModalOpen={setIsConfigModalOpen}
+                        nodes={nodes}
+                        edges={edges}
                     />
                     <div className="absolute top-4 left-4">
                         {isFullScreen === 'none' ? (

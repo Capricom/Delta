@@ -41,7 +41,8 @@ export function useFlowManagement({
             label: <div className="p-4 bg-gray-800 rounded-lg text-left">
                 <div className="text-sm text-gray-400">System Prompt</div>
                 <div className="mt-2">{systemPromptText}</div>
-            </div>
+            </div>,
+            text: systemPromptText
         },
         style: { width: FLOW_CONFIG.nodeWidth, height: 'auto' },
     }), []);
