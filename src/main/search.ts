@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import {findSimilarResponses } from "./db";
+import { findSimilarResponses } from "./db";
 
 interface SearchOptions {
     query: string;
@@ -10,7 +10,7 @@ interface SearchOptions {
 
 const searchResponsesHandler = async (_event: any, options: SearchOptions) => {
     try {
-        const { query, searchType = "combined", limit = 10, offset = 0 } = options;
+        const { query, searchType = "text", limit = 10, offset = 0 } = options;
         return await findSimilarResponses(query, limit, offset, searchType);
     } catch (error) {
         console.error("Error searching responses:", error);

@@ -1,5 +1,5 @@
 import { ollama } from "ollama-ai-provider";
-import { streamText , Message } from "ai";
+import { Message, streamText } from "ai";
 import { ipcMain } from "electron";
 import { ulid } from "ulid";
 import { insert } from "./db";
@@ -177,16 +177,22 @@ async function handleStreamComplete({
         top_p: topP,
     };
 
-    const embeddingProvider = getEmbeddingProvider(model);
-    const embeddingsRes = await embeddingProvider.doEmbed({
-        values: [prompt, response.text],
-    });
+    let embeddingData: EmbeddingData | null = null;
+    try {
+        const embeddingProvider = getEmbeddingProvider(model);
+        const embeddingsRes = await embeddingProvider.doEmbed({
+            values: [prompt, response.text],
+        });
 
-    const embeddingData: EmbeddingData = {
-        prompt_embedding: embeddingsRes.embeddings[0],
-        response_embedding: embeddingsRes.embeddings[1],
-        model: "nomic-embed-text",
-    };
+        embeddingData = {
+            prompt_embedding: embeddingsRes.embeddings[0],
+            response_embedding: embeddingsRes.embeddings[1],
+            model: "nomic-embed-text",
+        };
+    } catch (error) {
+        console.error("Failed to generate embeddings:", error);
+        embeddingData = null;
+    }
 
     insert(responseData, embeddingData, conversation, attachments);
 }

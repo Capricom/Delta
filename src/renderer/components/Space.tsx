@@ -155,6 +155,7 @@ export default function Space({ responses,
     } = useMessageManagement({
         responses,
         setMessages,
+        messages,
         reload,
         isFullScreen,
         setIsFullScreen,

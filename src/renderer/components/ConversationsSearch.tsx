@@ -14,7 +14,7 @@ export function ConversationsSearch({ onSearchResults, onClearSearch, onResultSe
         }
         const results = await window.api.findSimilarResponses({
             query: query.trim(),
-            searchType: "combined",
+            searchType: "text",
             limit: 10,
             offset: 0
         });

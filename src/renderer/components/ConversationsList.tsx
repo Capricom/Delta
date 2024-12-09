@@ -112,6 +112,14 @@ function ConversationsList({ conversations, onSelect, onDelete, onNew, setIsFull
                     </div>
                 ))}
 
+                {searchResults?.length === 0 && (
+                    <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50/30 dark:bg-gray-900/30 rounded-lg">
+                        <MessageSquare size={24} className="mb-3 text-gray-400" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No results found</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Try adjusting your search terms</p>
+                    </div>
+                )}
+
                 {searchResults && searchResults.length > 0 && searchResults.map((result) => (
                     <div
                         key={result.id}

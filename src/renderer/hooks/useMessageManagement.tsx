@@ -6,6 +6,7 @@ import { Node } from '@xyflow/react';
 interface UseMessageManagementProps {
     responses: Response[];
     setMessages: (messages: Message[]) => void;
+    messages: Message[];
     reload?: (messages: Message[]) => void;
     isFullScreen: string;
     setIsFullScreen: (value: 'flow' | 'chat' | 'none' | ((prev: string) => string)) => void;
@@ -58,6 +59,7 @@ const buildMessageChain = (responses: Response[], startResponse: Response): Mess
 export function useMessageManagement({
     responses,
     setMessages,
+    messages,
     reload,
     isFullScreen,
     setIsFullScreen,
@@ -110,7 +112,7 @@ export function useMessageManagement({
             const newMessages = buildMessageChain(responses, clickedResponse);
             setMessages(newMessages);
         }
-    }, [responses, setMessages, setSelectedResponseId, setIsFullScreen]);
+    }, [responses, setMessages, messages, setSelectedResponseId, setIsFullScreen]);
 
     const onRegenerateClick = useCallback(async (message: any) => {
         const responseId = message.annotations?.find((a: any) => a.field === "responseId")?.id;
@@ -133,7 +135,7 @@ export function useMessageManagement({
                 // Create a new message chain up to the edited message
                 const messageChain = buildMessageChain(responses, clickedResponse);
                 const messagesUpToEdit = messageChain.slice(0, -2); // Remove both assistant and user message
-                
+
                 // Create a new message with edited content
                 const editedMessage: Message = {
                     id: `user-edit-${Date.now()}`,
@@ -143,7 +145,7 @@ export function useMessageManagement({
                     experimental_attachments: message.experimental_attachments,
                     annotations: createMessageAnnotations(clickedResponse)
                 };
-                
+
                 // Set messages and trigger reload for new assistant response
                 setMessages([...messagesUpToEdit, editedMessage]);
                 reload([...messagesUpToEdit, editedMessage]);
