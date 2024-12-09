@@ -69,8 +69,19 @@ const config: ForgeConfig = {
         "better-sqlite3",
         "bindings",
         "file-uri-to-path",
+
         "sqlite-vec",
         "sqlite-vec-darwin-arm64",
+
+        "knex",
+        "tarn",
+        "lodash",
+        "colorette",
+        "escalade",
+        "pg-connection-string",
+        "rechoir",
+        "resolve-from",
+        "tildify",
       ];
 
       const sourceNodeModulesPath = path.resolve(__dirname, "node_modules");

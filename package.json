@@ -52,6 +52,7 @@
     "@ai-sdk/google": "^1.0.3",
     "@ai-sdk/openai": "^1.0.4",
     "@vitejs/plugin-react": "^4.3.3",
+    "@xmldom/xmldom": "^0.9.6",
     "@xyflow/react": "^12.3.5",
     "ai": "^4.0.3",
     "better-sqlite3": "^11.7.0",

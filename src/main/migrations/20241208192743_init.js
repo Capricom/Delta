@@ -5,11 +5,6 @@ const sqliteVec = require("sqlite-vec");
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
-    let sqliteVecPath = sqliteVec.getLoadablePath().replace(/\.[^.]+$/, "");
-    if (sqliteVecPath.includes("app.asar")) {
-        sqliteVecPath = sqliteVecPath.replace("app.asar", "app.asar.unpacked");
-    }
-
     await knex.schema
         .createTable("conversations", (table) => {
             table.text("id").primary();
