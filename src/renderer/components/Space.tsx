@@ -5,6 +5,7 @@ import {
     Controls,
     MiniMap,
     useReactFlow,
+    Background,
 } from '@xyflow/react';
 import { SpaceProps } from '../types/types';
 import { ArrowLeft, ArrowRight, Maximize2, Minimize2, Menu, SettingsIcon } from 'lucide-react';
@@ -216,6 +217,11 @@ export default function Space({ responses,
                     nodesDraggable={false}
                     proOptions={{ hideAttribution: true }}
                 >
+                    <Background
+                        gap={30}
+                        size={3}
+                        color="#374151"
+                    />
                     <Controls />
                     <MiniMap style={{ width: 100, height: 100 }} />
                 </ReactFlow>
