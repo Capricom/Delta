@@ -95,6 +95,7 @@ export default function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
+  const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
 
   const scrollToBottom = () => {
@@ -194,11 +195,26 @@ export default function ChatInterface({
     setIsDownloadMenuOpen(false);
   };
 
+
+
   return (
     <div className="flex flex-col h-screen dark:bg-gray-900">
       {error && (
         <div className="bg-red-500/10 border border-red-500 text-red-500 dark:text-red-400 p-4 mx-4 mt-4 rounded-lg">
-          {`There was an error making the request. Please try again with another model.`}
+          <div className="flex justify-between items-start">
+            <div>There was an error making the request. Please try again with another model.</div>
+            <button
+              onClick={() => setIsErrorExpanded(!isErrorExpanded)}
+              className="ml-2 p-1 hover:bg-red-500/20 rounded"
+            >
+              {isErrorExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
+          {isErrorExpanded && (
+            <div className="mt-2 p-2 bg-red-500/5 rounded overflow-x-auto text-sm">
+              {error.toString()}
+            </div>
+          )}
         </div>
       )}
       {selectedImage && (
