@@ -51,6 +51,7 @@
     "@ai-sdk/anthropic": "^1.0.4",
     "@ai-sdk/google": "^1.0.3",
     "@ai-sdk/openai": "^1.0.4",
+    "@electron-forge/maker-dmg": "^7.6.0",
     "@vitejs/plugin-react": "^4.3.3",
     "@xmldom/xmldom": "^0.9.6",
     "@xyflow/react": "^12.3.5",

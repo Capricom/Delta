@@ -8,6 +8,7 @@ import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { cp, mkdir } from "node:fs/promises";
 import path from "node:path";
+import MakerDMG from "@electron-forge/maker-dmg";
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -20,10 +21,13 @@ const config: ForgeConfig = {
   rebuildConfig: {
     onlyModules: ["better-sqlite3", "sqlite-vec", "sqlite-vec-darwin-arm64"],
     force: true,
+    platform: process.platform,
+    buildFromSource: true,
   },
   makers: [
     new MakerSquirrel({}),
     new MakerZIP({}, ["darwin"]),
+    new MakerDMG(),
     new MakerRpm({}),
     new MakerDeb({}),
   ],
