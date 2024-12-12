@@ -1,4 +1,3 @@
-import { ollama } from "ollama-ai-provider";
 import { Message, streamText } from "ai";
 import { ipcMain } from "electron";
 import { ulid } from "ulid";

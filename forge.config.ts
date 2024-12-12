@@ -17,6 +17,7 @@ const config: ForgeConfig = {
       unpackDir: "{better-sqlite3,sqlite-vec*,sqlite-vec-darwin-arm64}",
     },
     icon: path.join(__dirname, "assets", "icon"),
+    extraResource: ["src/main/migrations"],
   },
   rebuildConfig: {
     onlyModules: ["better-sqlite3", "sqlite-vec", "sqlite-vec-darwin-arm64"],
@@ -86,6 +87,7 @@ const config: ForgeConfig = {
         "rechoir",
         "resolve-from",
         "tildify",
+        "get-package-type",
       ];
 
       const sourceNodeModulesPath = path.resolve(__dirname, "node_modules");
@@ -103,6 +105,20 @@ const config: ForgeConfig = {
           });
         }),
       );
+
+      const sourceMigrationsPath = path.resolve(
+        __dirname,
+        "src",
+        "main",
+        "migrations",
+      );
+      const destMigrationsPath = path.resolve(buildPath, "migrations");
+
+      await mkdir(destMigrationsPath, { recursive: true });
+      await cp(sourceMigrationsPath, destMigrationsPath, {
+        recursive: true,
+        preserveTimestamps: true,
+      });
     },
   },
 };

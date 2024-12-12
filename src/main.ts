@@ -1,16 +1,22 @@
 import { app, BrowserWindow, Menu } from "electron";
 import path from "path";
-import { log } from "./renderer/services/logging";
 import { setupChatHandler } from "./main/chat";
-import db, { ensureTables } from "./main/db";
+import { ensureTables } from "./main/db";
 import { initAttachmentStorage } from "./main/storage";
 import { setupConversationsHandlers } from "./main/conversations";
 import { setupSearchHandlers } from "./main/search";
 import { setupModelsHandlers } from "./main/models";
 import { setupSettingsHandlers } from "./main/settings";
 import { setupAdminHandlers } from "./main/admin";
+import log from "electron-log";
 
 app.name = "Delta";
+
+const logPath = app.getPath("logs");
+log.transports.file.resolvePathFn = () => path.join(logPath, "main.log");
+log.initialize({ preload: true });
+log.transports.file.level = "debug";
+Object.assign(console, log.functions);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (process.platform === "win32") {
@@ -59,7 +65,7 @@ const createWindow = () => {
   }
 
   // Log your config path.
-  log("APP_PATH", app.getPath("userData"));
+  console.log("APP_PATH", app.getPath("userData"));
 };
 
 // This method will be called when Electron has finished

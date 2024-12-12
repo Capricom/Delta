@@ -1,8 +1,17 @@
 import { join } from "path";
 import type { Knex } from "knex";
 import sqliteVec from "sqlite-vec";
+import { app } from "electron";
 
 export const getConfig = (filename: string): Knex.Config => {
+  const isProd = app.isPackaged;
+  const migrationsPath = isProd
+    ? join(process.resourcesPath, "migrations")
+    : join("./src", "main", "migrations");
+
+  console.log(`Using migrations from ${migrationsPath}`);
+  console.log(`Production mode: ${isProd}`);
+
   let sqliteVecPath = sqliteVec.getLoadablePath().replace(/\.[^.]+$/, "");
   if (sqliteVecPath.includes("app.asar")) {
     sqliteVecPath = sqliteVecPath.replace("app.asar", "app.asar.unpacked");
@@ -23,7 +32,7 @@ export const getConfig = (filename: string): Knex.Config => {
     },
     useNullAsDefault: true,
     migrations: {
-      directory: "./src/main/migrations",
+      directory: migrationsPath,
       loadExtensions: [".js"],
       extension: "js",
     },

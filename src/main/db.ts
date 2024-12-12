@@ -25,7 +25,9 @@ db.raw("PRAGMA journal_mode = WAL");
 
 export async function ensureTables(): Promise<void> {
     try {
+        console.log("Running database migrations...");
         await db.migrate.latest(config.migrations);
+        console.log("Database migrations completed successfully");
     } catch (error) {
         console.error("Migration failed:", error);
         throw error;
