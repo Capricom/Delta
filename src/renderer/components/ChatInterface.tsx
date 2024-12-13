@@ -289,7 +289,14 @@ export default function ChatInterface({
             </div>
 
             <div
-              onClick={() => onMessageClick(message)}
+              onMouseUp={(e) => {
+                const selection = window.getSelection();
+                if (selection && selection.toString().trim().length > 0) {
+                  // Text was selected, do nothing
+                  return;
+                }
+                onMessageClick(message);
+              }}
               style={{ cursor: 'pointer' }}
               className={`max-w-[80%] rounded-2xl px-4 py-2 ${message.role === "user"
                 ? "bg-blue-500 text-white rounded-br-none"
