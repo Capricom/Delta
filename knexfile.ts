@@ -4,7 +4,7 @@ import sqliteVec from "sqlite-vec";
 import { app } from "electron";
 
 export const getConfig = (filename: string): Knex.Config => {
-  const isProd = app.isPackaged;
+  const isProd = app?.isPackaged || false;
   const migrationsPath = isProd
     ? join(process.resourcesPath, "migrations")
     : join("./src", "main", "migrations");
