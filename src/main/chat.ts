@@ -1,4 +1,4 @@
-import { Message, streamText } from "ai";
+import { Message, smoothStream, streamText } from "ai";
 import { ipcMain } from "electron";
 import { ulid } from "ulid";
 import { insert } from "./db";
@@ -51,6 +51,7 @@ export function setupChatHandler() {
                     model: getProvider(model)(model),
                     temperature,
                     topP,
+                    experimental_transform: smoothStream(),
                     messages: newMessages,
                     ...(systemPrompt?.trim() && { system: systemPrompt }), // Only include system if it has content
                     async onFinish(response) {
