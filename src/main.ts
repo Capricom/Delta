@@ -9,6 +9,7 @@ import { setupModelsHandlers } from "./main/models";
 import { setupSettingsHandlers } from "./main/settings";
 import { setupAdminHandlers } from "./main/admin";
 import log from "electron-log";
+import { setupSummaryHandler } from "./main/summary";
 
 app.name = "Delta";
 
@@ -32,6 +33,7 @@ if (process.platform === "win32") {
 const registerIpcHandlers = () => {
   setupSettingsHandlers();
   setupChatHandler();
+  setupSummaryHandler();
   setupConversationsHandlers();
   setupModelsHandlers();
   setupSearchHandlers();

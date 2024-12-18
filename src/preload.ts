@@ -23,6 +23,9 @@ const onMessageHandler = (
 const onMessage = (msg: any, cb: (arg0: any) => any) =>
     onMessageHandler(msg, (evt: any, data: any) => cb(data));
 
+const createEventHandler = (callback: any) => (_event: any, message: any) =>
+    callback(message);
+
 contextBridge.exposeInMainWorld("api", {
     startStream: (options: {
         messages: Message[];
@@ -31,20 +34,33 @@ contextBridge.exposeInMainWorld("api", {
         topP: number;
         systemPrompt: string;
     }) => ipcRenderer.send("chat:start-stream", options),
-    onStreamData: (callback) =>
-        ipcRenderer.on(
-            "chat:stream-data",
-            (_event, message: Message) => callback(message),
-        ),
-    onStreamComplete: (callback) =>
-        ipcRenderer.on(
-            "chat:stream-complete",
-            (_event, message: Message) => callback(message),
-        ),
-    onStreamError: (callback: (error: Error) => void) =>
-        ipcRenderer.on("chat:stream-error", (_event, error: Error) => {
+    onStreamData: (callback) => {
+        const handler = createEventHandler(callback);
+        ipcRenderer.on("chat:stream-data", handler);
+        return handler; // Return the handler for removal
+    },
+    onStreamComplete: (callback) => {
+        const handler = createEventHandler(callback);
+        ipcRenderer.on("chat:stream-complete", handler);
+        return handler;
+    },
+    onStreamError: (callback) => {
+        const handler = (_event: any, error: Error) =>
             callback(new Error(error.message));
-        }),
+        ipcRenderer.on("chat:stream-error", handler);
+        return handler;
+    },
+    removeStreamDataListener: (handler) => {
+        if (handler) ipcRenderer.removeListener("chat:stream-data", handler);
+    },
+    removeStreamCompleteListener: (handler) => {
+        if (handler) {
+            ipcRenderer.removeListener("chat:stream-complete", handler);
+        }
+    },
+    removeStreamErrorListener: (handler) => {
+        if (handler) ipcRenderer.removeListener("chat:stream-error", handler);
+    },
     getConversations: () => ipcRenderer.invoke("conversations:get"),
     getResponses: (conversationId: string) =>
         ipcRenderer.invoke("conversations:getResponses", conversationId),
@@ -55,6 +71,19 @@ contextBridge.exposeInMainWorld("api", {
             conversationId,
             responseId,
         }),
+    generateSummary: (
+        messages: Message[],
+        model: string,
+        responseId: string,
+        conversationId: string,
+    ) => ipcRenderer.invoke("summary:generate", {
+        messages,
+        model,
+        responseId,
+        conversationId,
+    }),
+    getSummariesByConversation: (conversationId: string) =>
+        ipcRenderer.invoke("summary:getByConversation", conversationId),
     getModels: () => ipcRenderer.invoke("models:get"),
     checkOllamaStatus: (url: string) =>
         ipcRenderer.invoke("models:checkOllama", url),

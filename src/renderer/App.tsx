@@ -30,7 +30,7 @@ const useConversationResponses = () => {
 export const App: FC = () => {
     const { responses, setResponses, fetchResponses } = useConversationResponses();
     const [modelsByProvider, setModelsByProvider] = useState<Record<string, string[]>>({});
-    const [selectedModel, setSelectedModel] = useState<string>("llama3.2");
+    const [selectedModel, setSelectedModel] = useState<string>("llama3.2:latest");
     const [temperature, setTemperature] = useState<number>(0.7);
     const [topP, setTopP] = useState<number>(0.9);
     const { conversations, fetchConversations } = useConversations();

@@ -193,15 +193,6 @@ export default function Space({ responses,
                 setIsSystemPromptOpen={setIsSystemPromptOpen}
                 responses={responses}
             />
-            {isSidebarOpen && (
-                <div className="absolute top-4 right-4">
-                    <SettingsIcon
-                        className="cursor-pointer hover:opacity-70 text-gray-900 dark:text-gray-100"
-                        onClick={() => setIsConfigModalOpen(true)}
-                        size={20}
-                    />
-                </div>
-            )}
             <div className={`border-l border-gray-200 dark:border-gray-700 ${isSidebarOpen ? '' : 'hidden'}`}></div>
             <div className={`${isFullScreen === 'chat' ? 'hidden' : ''} ${isFullScreen === 'none' ? 'w-3/5' : 'w-full'} relative`}>
                 <ReactFlow

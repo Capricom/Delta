@@ -39,4 +39,14 @@ export const getConfig = (filename: string): Knex.Config => {
   };
 };
 
-export default getConfig(join(__dirname, "delta.db"));
+const defaultDbDir = join(
+  process.env.APPDATA ||
+    (process.platform == "darwin"
+      ? join(process.env.HOME!, "Library", "Application Support")
+      : join(process.env.HOME!, ".local", "share")),
+  "delta",
+  "delta_data",
+  "delta.db",
+);
+
+export default getConfig(defaultDbDir);

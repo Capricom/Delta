@@ -289,4 +289,48 @@ export async function findSimilarResponses(
     return combinedResults.slice(offset, offset + limit);
 }
 
+export async function insertSummary(data: {
+    id: string;
+    response_id: string;
+    conversation_id: string;
+    summary: string;
+    created_at: string;
+    type: string;
+}): Promise<void> {
+    await db("summaries").insert(data);
+}
+
+export async function getSummariesByConversationId(
+    conversationId: string,
+): Promise<{
+    id: string;
+    response_id: string;
+    conversation_id: string;
+    summary: string;
+    created_at: string;
+    type: string;
+}[]> {
+    return await db("summaries")
+        .where({ conversation_id: conversationId })
+        .orderBy("created_at", "desc");
+}
+
+export async function getSummaryForResponse(responseId: string): Promise<
+    {
+        id: string;
+        response_id: string;
+        conversation_id: string;
+        summary: string;
+        created_at: string;
+    } | undefined
+> {
+    return await db("summaries")
+        .where({ response_id: responseId })
+        .first();
+}
+
+export async function deleteSummary(id: string): Promise<void> {
+    await db("summaries").where({ id }).delete();
+}
+
 export default db;
