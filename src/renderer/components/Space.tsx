@@ -74,6 +74,7 @@ export default function Space({ responses,
             temperature: temperature,
             topP: topP,
             systemPrompt: systemPrompt,
+            attachments: droppedImages,
         },
         onFinish: (message: any) => {
             const conversationId = message.annotations?.find((a: any) => a.field === "conversationId")?.id;

@@ -132,20 +132,28 @@ function formatMessages(messages: Message[]) {
                 { type: "text", text: message.content },
                 ...message.experimental_attachments.map((attachment) => ({
                     type: "image",
-                    image: attachment,
+                    image: attachment.url,
                 })),
             ]
-            : [{ type: "text", text: message.content }],
+            : message.content,
     }));
 }
 
 async function handleAttachments(
     messages: Message[],
 ): Promise<StoredAttachment[]> {
-    const attachmentPromises = messages
-        .flatMap((message) => message.experimental_attachments || [])
-        .map((attachment) => storeAttachment(attachment));
-    return Promise.all(attachmentPromises);
+    const lastUserMessage = messages.findLast((message) =>
+        message.role === "user"
+    );
+    if (!lastUserMessage?.experimental_attachments?.length) {
+        return [];
+    }
+
+    const attachmentPromises = lastUserMessage.experimental_attachments.map((
+        attachment,
+    ) => storeAttachment(attachment));
+    const storedAttachments = await Promise.all(attachmentPromises);
+    return storedAttachments;
 }
 
 async function handleStreamComplete({

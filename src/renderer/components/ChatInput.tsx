@@ -4,7 +4,7 @@ import { CircleArrowUp, X } from 'lucide-react';
 interface ChatInputProps {
     input: string;
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    handleSubmit: (e: React.FormEvent, options?: { experimental_attachments?: string[] }) => void;
+    handleSubmit: (e: React.FormEvent) => void;
     textareaRef: React.RefObject<HTMLTextAreaElement>;
     droppedImages: string[];
     setDroppedImages: (images: string[]) => void;
@@ -22,7 +22,6 @@ export default function ChatInput({
 }: ChatInputProps) {
     const [dragActive, setDragActive] = useState(false);
     const [showRemoveIndex, setShowRemoveIndex] = useState<number | null>(null);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const handleDrag = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -45,7 +44,8 @@ export default function ChatInput({
         imageFiles.forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setDroppedImages(prev => [...prev, e.target?.result as string]);
+                const dataUrl = e.target?.result as string;
+                setDroppedImages(prev => [...prev, dataUrl]);
             };
             reader.readAsDataURL(file);
         });
@@ -117,7 +117,7 @@ export default function ChatInput({
                             e.preventDefault();
                             const target = e.target as HTMLTextAreaElement;
                             target.style.height = '40px';
-                            handleSubmit(e, { experimental_attachments: droppedImages });
+                            handleSubmit(e);
                             setDroppedImages([]);
                         }
                     }}

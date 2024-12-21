@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChatRequestOptions, CreateMessage, Message } from "ai";
+import { parseBase64ToAttachment } from "../services/attachment";
 
 interface UseChatOptions {
     body?: Record<string, any>;
@@ -56,11 +57,6 @@ export function useChat({ body, onFinish }: UseChatOptions) {
                 const conversationId = message.annotations?.find((a: any) =>
                     a.field === "conversationId"
                 )?.id;
-                console.log("Stream complete", {
-                    responseId,
-                    conversationId,
-                    message,
-                });
                 if (lastTwoMessages.length === 2) {
                     // TODO: enable when ready to store summaries
                     // window.api.generateSummary(
@@ -93,10 +89,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
     }, []);
 
     const append = useCallback(
-        async (
-            message: Message | CreateMessage,
-            chatRequestOptions?: ChatRequestOptions,
-        ) => {
+        async (message: Message | CreateMessage) => {
             try {
                 setError(undefined);
                 setIsLoading(true);
@@ -125,6 +118,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
             body?.temperature,
             body?.topP,
             body?.systemPrompt,
+            body?.droppedImages,
             messages,
         ],
     );
@@ -164,6 +158,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
             body?.temperature,
             body?.topP,
             body?.systemPrompt,
+            body?.droppedImages,
             messages,
         ],
     );
@@ -171,22 +166,23 @@ export function useChat({ body, onFinish }: UseChatOptions) {
     const handleSubmit = useCallback(
         async (
             e?: { preventDefault: () => void },
-            chatRequestOptions?: ChatRequestOptions,
         ) => {
             e?.preventDefault();
             if (!input.trim() || isLoading) return;
-
             const newMessage: Message = {
                 id: Date.now().toString(),
                 role: "user",
                 content: input,
                 annotations: messages[messages.length - 1]?.annotations || [],
+                experimental_attachments: body?.attachments.map((
+                    image: string,
+                ) => (parseBase64ToAttachment(image))),
             };
 
             setInput("");
-            await append(newMessage, chatRequestOptions);
+            await append(newMessage);
         },
-        [input, isLoading, append, messages],
+        [input, isLoading, append, messages, body?.attachments],
     );
 
     const stop = useCallback(() => {

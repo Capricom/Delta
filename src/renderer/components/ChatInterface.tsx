@@ -3,14 +3,14 @@ import { Copy, Download, Variable, RotateCw, SquarePen, Check, X, Settings, Chev
 import MarkdownWithSyntax from './MarkdownWithSyntax';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
-import { Message } from 'ai';
+import { Attachment, ChatRequestOptions, Message } from 'ai';
 import { Node, Edge } from '@xyflow/react';
 
 interface ChatInterfaceProps {
   messages: Message[];
   input: string;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (e?: { preventDefault: () => void }) => Promise<void>;
   selectedModel: string;
   setSelectedModel: (model: string) => void;
   modelsByProvider: Record<string, string[]>;
@@ -139,9 +139,6 @@ export default function ChatInterface({
 
   const handleDownloadCanvas = () => {
     if (nodes.length === 0) return;
-    console.log("Messages:", messages);
-    console.log("Nodes:", nodes);
-
 
     const conversationId = messages[0]?.annotations?.find((a: any) => a.field === "conversationId")?.id;
 
@@ -326,18 +323,21 @@ export default function ChatInterface({
                 />
               ) : (
                 <div className="prose dark:prose-invert max-w-none prose-sm">
-                  {message.experimental_attachments?.map((attachment: string, index: Key | null | undefined) => (
-                    <img
-                      key={index?.toString()}
-                      src={attachment}
-                      alt={`Attachment ${Number(index) + 1}`}
-                      className="max-w-full h-auto rounded-lg mb-2 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedImage(attachment);
-                      }}
-                    />
-                  ))}
+                  {message.experimental_attachments?.map((attachment: Attachment, index: Key | null | undefined) => {
+                    return (
+                      <img
+                        key={index?.toString()}
+                        src={attachment.url}
+                        alt={`Attachment ${Number(index) + 1}`}
+                        className="max-w-full h-auto rounded-lg mb-2 cursor-pointer"
+                        onError={(e) => console.error('Image failed to load:', e)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage(attachment.url);
+                        }}
+                      />
+                    );
+                  })}
                   <MarkdownWithSyntax>{message.content}</MarkdownWithSyntax>
                 </div>
               )}
@@ -346,7 +346,8 @@ export default function ChatInterface({
         ))}
         <div ref={messagesEndRef} />
       </main>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+      <form onSubmit={(e) => handleSubmit(e)} className="flex flex-col gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
             {Object.keys(modelsByProvider).length === 0 ? (

@@ -1,13 +1,11 @@
+import { Attachment } from "ai";
 import { app } from "electron";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { ulid } from "ulid";
 
-const ATTACHMENTS_DIR = join(
-    app.getPath("userData"),
-    "delta_data",
-    "attachments",
-);
+const DELTA_DATA_DIR = join(app.getPath("userData"), "delta_data");
+const ATTACHMENTS_DIR = join(DELTA_DATA_DIR, "attachments");
 
 export interface StoredAttachment {
     id: string;
@@ -24,10 +22,12 @@ export async function initAttachmentStorage() {
 }
 
 export async function storeAttachment(
-    base64Data: string,
+    attachment: Attachment,
 ): Promise<StoredAttachment> {
     const attachmentId = ulid();
-    const match = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
+    const match = attachment.url.match(
+        /^data:image\/(\w+);base64,(.+)$/,
+    );
     if (!match) {
         throw new Error("Invalid base64 image data");
     }
@@ -45,15 +45,14 @@ export async function storeAttachment(
         type,
     };
 }
-
 export async function getAttachment(filePath: string): Promise<Buffer> {
-    const fullPath = join(process.cwd(), "public", filePath);
+    const fullPath = join(DELTA_DATA_DIR, filePath);
     const fs = await import("fs/promises");
     return fs.readFile(fullPath);
 }
 
 export async function deleteAttachment(filePath: string): Promise<void> {
-    const fullPath = join(process.cwd(), "public", filePath);
+    const fullPath = join(DELTA_DATA_DIR, filePath);
     const fs = await import("fs/promises");
     await fs.unlink(fullPath);
 }
