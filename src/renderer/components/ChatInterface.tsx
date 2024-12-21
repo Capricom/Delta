@@ -3,8 +3,9 @@ import { Copy, Download, Variable, RotateCw, SquarePen, Check, X, Settings, Chev
 import MarkdownWithSyntax from './MarkdownWithSyntax';
 import ChatInput from './ChatInput';
 import ImageModal from './ImageModal';
-import { Attachment, ChatRequestOptions, Message } from 'ai';
+import { Attachment, Message } from 'ai';
 import { Node, Edge } from '@xyflow/react';
+import { Response } from '../types/types';
 
 interface ChatInterfaceProps {
   messages: Message[];

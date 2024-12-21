@@ -7,7 +7,7 @@ interface ChatInputProps {
     handleSubmit: (e: React.FormEvent) => void;
     textareaRef: React.RefObject<HTMLTextAreaElement>;
     droppedImages: string[];
-    setDroppedImages: (images: string[]) => void;
+    setDroppedImages: React.Dispatch<React.SetStateAction<string[]>>;
     disabled?: boolean;
 }
 
@@ -45,12 +45,11 @@ export default function ChatInput({
             const reader = new FileReader();
             reader.onload = (e) => {
                 const dataUrl = e.target?.result as string;
-                setDroppedImages(prev => [...prev, dataUrl]);
+                setDroppedImages((prev: string[]) => [...prev, dataUrl]);
             };
             reader.readAsDataURL(file);
         });
     }, []);
-
     const removeImage = (index: number) => {
         setDroppedImages(prev => prev.filter((_, i) => i !== index));
         setShowRemoveIndex(null);

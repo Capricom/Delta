@@ -20,7 +20,7 @@ console.log(`Using database at ${filename}`);
 
 const config = getConfig(filename);
 
-export const db = knex(config);
+export const db: knex.Knex = knex(config);
 db.raw("PRAGMA journal_mode = WAL");
 
 export async function ensureTables(): Promise<void> {
