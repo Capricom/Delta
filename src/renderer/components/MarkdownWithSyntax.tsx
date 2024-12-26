@@ -38,9 +38,15 @@ const MarkdownWithSyntax = ({ children, showRaw = false }: MarkdownWithSyntaxPro
                     );
                 },
                 p: ({ children }) => <p className="my-1">{children}</p>,
-                ul: ({ children }) => <ul className="my-1 pl-4">{children}</ul>,
-                ol: ({ children }) => <ol className="my-1 pl-4">{children}</ol>,
-                li: ({ children }) => <li className="my-0.5">{children}</li>,
+                ul: ({ children }) => <ul className="my-1 pl-4 list-disc">{children}</ul>,
+                ol: ({ children }) => <ol className="my-1 pl-4 list-decimal">{children}</ol>,
+                li: ({ children, ...props }) => {
+                    return (
+                        <li className="my-0.5 ml-4" {...props}>
+                            {children}
+                        </li>
+                    );
+                },
                 h1: ({ children }) => <h1 className="text-xl font-bold my-2">{children}</h1>,
                 h2: ({ children }) => <h2 className="text-lg font-bold my-2">{children}</h2>,
                 h3: ({ children }) => <h3 className="text-base font-bold my-1.5">{children}</h3>,
