@@ -1,4 +1,4 @@
-# Delta
+# Delta: LLM conversation branching
 
 ![Delta app icon, a river leading into its delta in the shape of a tree containing leaves that also looks like a brain](./.github/images/delta_icon.png)
 
@@ -7,7 +7,7 @@
 Delta is a local-first, app/UX for branching conversations with LLMs.
 It allow you to easily rewind and branch conversations by respond to the model differently to take the dialogue in another direction.
 
-I've find the approach useful for idea exploration, brainstorming and trying out different models for a use case.
+I've found the approach useful for idea exploration, brainstorming and trying out different models for a use case.
 The branching paradigm also makes it easier to manage past context and avoid copying and pasting while iterating on an LLM prompt or application.
 
 ## Setup
@@ -33,6 +33,13 @@ npm run make
 ```
 
 The outputs can be found in the `out` folder.
+
+Since this app's code isn't signed yet because it's in early development, you will need to run the following for macOS to allow you to open it.
+
+```sh
+xattr -cr /path/to/Delta.app
+```
+
 
 ## Migrations
 
