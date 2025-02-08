@@ -38,6 +38,7 @@ export interface Response {
     datetime_utc: string;
     temperature: number;
     top_p: number;
+    max_tokens: number;
     attachments: string[];
 }
 
@@ -99,6 +100,8 @@ export interface SpaceProps {
     setTemperature: (temp: number) => void;
     topP: number;
     setTopP: (topP: number) => void;
+    maxTokens: number;
+    setMaxTokens: (maxTokens: number) => void;
 
     // Settings
     settings: Settings;

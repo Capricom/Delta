@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld("api", {
         model: string;
         temperature: number;
         topP: number;
+        maxTokens: number;
         systemPrompt: string;
     }) => ipcRenderer.send("chat:start-stream", options),
     onStreamData: (callback) => {

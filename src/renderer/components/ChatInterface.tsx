@@ -20,6 +20,8 @@ interface ChatInterfaceProps {
   setTemperature: (temp: number) => void;
   topP: number;
   setTopP: (topP: number) => void;
+  maxTokens: number;
+  setMaxTokens: (maxTokens: number) => void;
   onRegenerateClick: (message: any) => void;
   onEditMessage: (message: any, newContent: string) => void;
   droppedImages: string[];
@@ -79,6 +81,8 @@ export default function ChatInterface({
   setTemperature,
   topP,
   setTopP,
+  maxTokens,
+  setMaxTokens,
   onRegenerateClick,
   onEditMessage,
   droppedImages,
@@ -470,6 +474,37 @@ export default function ChatInterface({
                       const value = parseFloat(e.target.value);
                       if (!isNaN(value) && value >= 0 && value <= 1) {
                         setTopP(value);
+                      }
+                    }}
+                    className="w-16 px-1 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm min-w-[80px] text-gray-700 dark:text-gray-300">Max Tokens</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="8192"
+                    step="1"
+                    value={maxTokens}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value) && value >= 0 && value <= 8192) {
+                        setMaxTokens(value);
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="8192"
+                    step="1"
+                    value={maxTokens}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value) && value >= 0 && value <= 8192) {
+                        setMaxTokens(value);
                       }
                     }}
                     className="w-16 px-1 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

@@ -11,11 +11,12 @@ export function setupChatHandler() {
         "chat:start-stream",
         async (
             event,
-            { messages, model, temperature, topP, systemPrompt }: {
+            { messages, model, temperature, topP, maxTokens, systemPrompt }: {
                 messages: Message[];
                 model: string;
                 temperature: number;
                 topP: number;
+                maxTokens: number;
                 systemPrompt: string;
             },
         ) => {
@@ -42,6 +43,7 @@ export function setupChatHandler() {
                     { id: provider.toString(), field: "provider" },
                     { id: temperature.toString(), field: "temperature" },
                     { id: topP.toString(), field: "topP" },
+                    { id: maxTokens.toString(), field: "maxTokens" },
                 ];
 
                 const newMessages = formatMessages(messages);
@@ -51,6 +53,7 @@ export function setupChatHandler() {
                     model: getProvider(model)(model),
                     temperature,
                     topP,
+                    maxTokens,
                     experimental_transform: smoothStream(),
                     messages: newMessages,
                     ...(systemPrompt?.trim() && { system: systemPrompt }), // Only include system if it has content
@@ -69,6 +72,7 @@ export function setupChatHandler() {
                             parentId,
                             temperature,
                             topP,
+                            maxTokens,
                             conversation,
                             attachments,
                             annotations: promptAnnotations,
@@ -167,6 +171,7 @@ async function handleStreamComplete({
     parentId,
     temperature,
     topP,
+    maxTokens,
     conversation,
     attachments,
 }: any) {
@@ -183,6 +188,7 @@ async function handleStreamComplete({
         datetime_utc: new Date().toISOString(),
         temperature,
         top_p: topP,
+        max_tokens: maxTokens,
     };
 
     let embeddingData: EmbeddingData | null = null;

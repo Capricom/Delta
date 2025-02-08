@@ -33,6 +33,7 @@ export const App: FC = () => {
     const [selectedModel, setSelectedModel] = useState<string>("llama3.2:latest");
     const [temperature, setTemperature] = useState<number>(0.7);
     const [topP, setTopP] = useState<number>(0.9);
+    const [maxTokens, setMaxTokens] = useState<number>(8192);
     const { conversations, fetchConversations } = useConversations();
     const [settings, setSettings] = useState<Settings>({ providers: [] });
 
@@ -111,6 +112,8 @@ export const App: FC = () => {
                 setTemperature={setTemperature}
                 topP={topP}
                 setTopP={setTopP}
+                maxTokens={maxTokens}
+                setMaxTokens={setMaxTokens}
                 settings={settings}
                 updateProvider={updateProvider}
                 saveSettings={saveSettings}

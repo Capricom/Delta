@@ -22,7 +22,8 @@ const createMessageAnnotations = (response: Response) => [
     { field: "parentId", id: response.parent_id },
     { field: "provider", id: response.provider },
     { field: "temperature", id: response.temperature.toString() },
-    { field: "topP", id: response.top_p.toString() }
+    { field: "topP", id: response.top_p.toString() },
+    { field: "maxTokens", id: response.max_tokens.toString() }
 ];
 
 const buildMessageChain = (responses: Response[], startResponse: Response): Message[] => {

@@ -38,6 +38,8 @@ export default function Space({ responses,
     setTemperature,
     topP,
     setTopP,
+    maxTokens,
+    setMaxTokens,
     settings,
     updateProvider,
     saveSettings,
@@ -73,6 +75,7 @@ export default function Space({ responses,
             model: selectedModel,
             temperature: temperature,
             topP: topP,
+            maxTokens: maxTokens,
             systemPrompt: systemPrompt,
             attachments: droppedImages,
         },
@@ -275,6 +278,8 @@ export default function Space({ responses,
                         setTemperature={setTemperature}
                         topP={topP}
                         setTopP={setTopP}
+                        maxTokens={maxTokens}
+                        setMaxTokens={setMaxTokens}
                         onRegenerateClick={onRegenerateClick}
                         droppedImages={droppedImages}
                         setDroppedImages={setDroppedImages}

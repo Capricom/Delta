@@ -14,6 +14,7 @@ interface IElectronAPI {
             model: string;
             temperature: number;
             topP: number;
+            maxTokens: number;
             systemPrompt: string;
         },
     ) => void;

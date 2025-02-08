@@ -135,7 +135,7 @@ export default function NodeContent({ nodeId, response, expanded, setExpandedNod
         <div className={`group bg-gray-200/90 dark:bg-gray-700/90 px-2 py-1 rounded-b-lg text-left border-l-2 ${providerColor}`}>
           <div className="flex justify-between items-center">
             <span className="text-[10px]">
-              {response.provider || 'unknown'}/{response.model || 'unknown'} • t={response.temperature?.toFixed(2) ?? '0.00'} • p={response.top_p?.toFixed(2) ?? '1.00'}
+              {response.provider || 'unknown'}/{response.model || 'unknown'} • t={response.temperature?.toFixed(2) ?? '0.00'} • p={response.top_p?.toFixed(2) ?? '1.00'} • m_t={response.max_tokens ?? '1024'}
             </span>
             <div className="flex gap-1 opacity-0 transition-opacity will-change-opacity group-hover:opacity-100">
               <button

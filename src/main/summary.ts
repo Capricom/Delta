@@ -88,6 +88,7 @@ ${messages.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
         prompt,
         temperature: 0.9,
         topP: 1,
+        maxTokens: 256,
         system: SYSTEM_PROMPT,
     });
 

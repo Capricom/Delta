@@ -104,6 +104,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
                     model: body?.model,
                     temperature: body?.temperature,
                     topP: body?.topP,
+                    maxTokens: body?.maxTokens,
                     systemPrompt: body?.systemPrompt,
                 });
                 return message.content;
@@ -117,6 +118,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
             body?.model,
             body?.temperature,
             body?.topP,
+            body?.maxTokens,
             body?.systemPrompt,
             body?.droppedImages,
             messages,
@@ -143,6 +145,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
                     model: body?.model,
                     temperature: body?.temperature,
                     topP: body?.topP,
+                    maxTokens: body?.maxTokens,
                     systemPrompt: body?.systemPrompt,
                 });
                 return lastMessage.content;
@@ -157,6 +160,7 @@ export function useChat({ body, onFinish }: UseChatOptions) {
             body?.model,
             body?.temperature,
             body?.topP,
+            body?.maxTokens,
             body?.systemPrompt,
             body?.droppedImages,
             messages,
