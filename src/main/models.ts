@@ -46,6 +46,34 @@ const getOllamaModels = async () => {
     }
 };
 
+const getGoogleModels = async () => {
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKeys.get("google")}`);
+        if (!response.ok) {
+            return {};
+        }
+        const data = await response.json();
+        return data.models.reduce(
+            (
+                acc: Record<
+                    string,
+                    { provider: typeof google; providerName: string }
+                >,
+                model: any,
+            ) => {
+                if (!model.supportedGenerationMethods.includes("generateContent")) return acc;
+                acc[model.name.split("/")[1]] = { get provider() {
+                            return getGoogleProvider();
+                        }, providerName: "google" };
+                return acc;
+            },
+            {},
+        );
+    } catch {
+        return {};
+    }
+};
+
 export async function checkOllamaStatus(url: string = DEFAULT_OLLAMA_URL) {
     try {
         const response = await fetch(`${url}/api/tags`);
@@ -56,19 +84,6 @@ export async function checkOllamaStatus(url: string = DEFAULT_OLLAMA_URL) {
 }
 
 const baseModelProviders = {
-    "gemini-1.5-flash-latest": {
-        get provider() {
-            return getGoogleProvider();
-        },
-        providerName: "google",
-    },
-    "gemini-1.5-pro-latest": {
-        get provider() {
-            return getGoogleProvider();
-        },
-        providerName: "google",
-    },
-
     "claude-3-5-sonnet-20240620": {
         get provider() {
             return getAnthropicProvider();
@@ -118,9 +133,11 @@ let modelProviders = baseModelProviders;
 
 const refreshModelProviders = async () => {
     const ollamaModels = await getOllamaModels();
+    const googleModels = await getGoogleModels(); 
     modelProviders = {
         ...baseModelProviders,
         ...ollamaModels,
+        ...googleModels,
     };
 };
 
