@@ -422,7 +422,7 @@ export default function ChatInterface({
                   <input
                     type="range"
                     min="0"
-                    max="1"
+                    max="2"
                     step="0.01"
                     value={temperature}
                     onChange={(e) => {
@@ -436,7 +436,7 @@ export default function ChatInterface({
                   <input
                     type="number"
                     min="0"
-                    max="1"
+                    max="2"
                     step="0.01"
                     value={temperature}
                     onChange={(e) => {
